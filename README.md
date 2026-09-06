@@ -285,3 +285,4 @@ Frontend subscribe tới `/queue/notifications/{userId}` qua STOMP/SockJS.
 - Sử dụng connection pool phù hợp (HikariCP đã cấu hình)
 - Blacklist refresh token nên dùng Redis thay in-memory Set trong production
 # equipment-repair
+# repair-shop-management
