@@ -1,0 +1,2 @@
+package com.repairshop.enums;
+public enum TicketStatus { RECEIVED, DIAGNOSING, QUOTED, APPROVED, REPAIRING, COMPLETED, DELIVERED, CANCELLED, REJECTED }

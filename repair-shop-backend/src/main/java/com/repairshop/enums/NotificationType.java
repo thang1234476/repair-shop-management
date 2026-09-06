@@ -1,0 +1,2 @@
+package com.repairshop.enums;
+public enum NotificationType { TICKET_CREATED, QUOTE_AVAILABLE, QUOTE_CONFIRMED, QUOTE_REJECTED, TICKET_COMPLETED, STATUS_UPDATE }
