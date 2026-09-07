@@ -18,4 +18,7 @@ export const ticketApi = {
   // Admin
   getAllTickets: (params) => api.get('/admin/tickets', { params }),
   getTicketAdmin: (id) => api.get(`/admin/tickets/${id}`),
+  updateTicketStatusAdmin: (id, data) => api.put(`/admin/tickets/${id}/status`, data),
+  getTicketTimelineAdmin: (id) => api.get(`/admin/tickets/${id}/timeline`),
+  assignStaffToTicket: (id, staffId) => api.put(`/admin/tickets/${id}/assign?staffId=${staffId}`),
 };

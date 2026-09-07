@@ -12,7 +12,11 @@ export const customerApi = {
   getCustomers: (params) => api.get('/staff/customers', { params }),
   createCustomer: (data) => api.post('/staff/customers', data),
   updateCustomer: (id, data) => api.put(`/staff/customers/${id}`, data),
+  // Admin
   getAdminCustomers: (params) => api.get('/admin/customers', { params }),
   getAdminCustomer: (id) => api.get(`/admin/customers/${id}`),
-  lockCustomer: (id) => api.put(`/admin/customers/${id}/lock`),
+  updateAdminCustomer: (id, data) => api.put(`/admin/customers/${id}`, data),
+  toggleCustomerLock: (id) => api.put(`/admin/customers/${id}/lock`),
+  getAdminCustomerDevices: (id) => api.get(`/admin/customers/${id}/devices`),
+  getAdminCustomerTickets: (id, params) => api.get(`/admin/customers/${id}/tickets`, { params }),
 };

@@ -11,6 +11,7 @@ import com.repairshop.exception.BadRequestException;
 import com.repairshop.exception.ResourceNotFoundException;
 import com.repairshop.repository.CustomerRepository;
 import com.repairshop.repository.UserRepository;
+import com.repairshop.exception.ResourceNotFoundException;
 import com.repairshop.security.JwtTokenProvider;
 import com.repairshop.security.UserDetailsImpl;
 import com.repairshop.service.AuthService;
@@ -80,14 +81,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
+        // Tìm user theo email
+        User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new BadRequestException("Email không tồn tại trong hệ thống"));
+
+        // Xác thực bằng username (Spring Security dùng username nội bộ)
         Authentication auth = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            new UsernamePasswordAuthenticationToken(user.getUsername(), request.getPassword())
         );
         UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
         String jwt = tokenProvider.generateAccessToken(userDetails);
         String refresh = tokenProvider.generateRefreshToken(userDetails.getUsername());
-
-        User user = userRepository.findByUsername(request.getUsername()).orElseThrow();
 
         return AuthResponse.builder()
             .accessToken(jwt)

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Checkbox, Card, message } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -34,8 +34,8 @@ export default function LoginPage() {
         <Card style={{ width: 400 }} className="glass-card">
           <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Đăng Nhập</h2>
           <Form name="login" onFinish={onFinish} layout="vertical">
-            <Form.Item name="username" rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}>
-              <Input prefix={<UserOutlined />} placeholder="Tên đăng nhập" size="large" />
+            <Form.Item name="email" rules={[{ required: true, message: 'Vui lòng nhập email!' }, { type: 'email', message: 'Email không hợp lệ!' }]}>
+              <Input prefix={<MailOutlined />} placeholder="Email" size="large" />
             </Form.Item>
             <Form.Item name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}>
               <Input.Password prefix={<LockOutlined />} placeholder="Mật khẩu" size="large" />
