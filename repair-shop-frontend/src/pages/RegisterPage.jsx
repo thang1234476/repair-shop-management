@@ -14,7 +14,7 @@ export default function RegisterPage() {
     try {
       await register({ ...values, role: 'CUSTOMER' });
       message.success('Đăng ký thành công!');
-      navigate('/customer');
+      navigate('/customer-new');
     } catch (error) {
       message.error(error.response?.data?.message || 'Đăng ký thất bại');
     } finally {

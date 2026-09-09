@@ -9,7 +9,13 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 
-// Customer pages
+// Public pages & Layout
+import PublicLayout from './layouts/PublicLayout';
+import LandingPage from './pages/public/LandingPage';
+import RoleSelectionPage from './pages/public/RoleSelectionPage';
+import RoleLoginPage from './pages/public/RoleLoginPage';
+
+// Customer pages (Legacy UI — /customer/...)
 import CustomerLayout from './layouts/CustomerLayout';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
 import CustomerTickets from './pages/customer/CustomerTickets';
@@ -17,6 +23,15 @@ import CustomerTicketDetail from './pages/customer/CustomerTicketDetail';
 import CustomerDevices from './pages/customer/CustomerDevices';
 import CustomerProfile from './pages/customer/CustomerProfile';
 import CustomerNotifications from './pages/customer/CustomerNotifications';
+
+// Customer pages (Modern UI — /customer-new/...)
+import CustomerModernLayout from './layouts/CustomerModernLayout';
+import ModernDashboard from './pages/customer-modern/ModernDashboard';
+import ModernTickets from './pages/customer-modern/ModernTickets';
+import ModernTicketDetail from './pages/customer-modern/ModernTicketDetail';
+import ModernDevices from './pages/customer-modern/ModernDevices';
+import ModernProfile from './pages/customer-modern/ModernProfile';
+import ModernNotifications from './pages/customer-modern/ModernNotifications';
 
 // Staff pages
 import StaffLayout from './layouts/StaffLayout';
@@ -61,11 +76,17 @@ export default function App() {
         <NotificationProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/login" element={<LoginPage />} />
+              {/* ── Public routes ── */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<LandingPage />} />
+              </Route>
+              <Route path="/login" element={<RoleSelectionPage />} />
+              <Route path="/login/:role" element={<RoleLoginPage />} />
+              <Route path="/login-legacy" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/unauthorized" element={<UnauthorizedPage />} />
               
-              {/* Customer routes */}
+              {/* ── Legacy Customer UI routes (/customer/...) — DO NOT MODIFY ── */}
               <Route element={<ProtectedRoute roles={['CUSTOMER']} />}>
                 <Route element={<CustomerLayout />}>
                   <Route path="/customer" element={<CustomerDashboard />} />
@@ -76,7 +97,20 @@ export default function App() {
                   <Route path="/customer/notifications" element={<CustomerNotifications />} />
                 </Route>
               </Route>
-              
+
+              {/* ── Modern Customer UI routes (/customer-new/...) ── */}
+              <Route element={<ProtectedRoute roles={['CUSTOMER']} />}>
+                <Route element={<CustomerModernLayout />}>
+                  <Route path="/customer-new" element={<ModernDashboard />} />
+                  <Route path="/customer-new/tickets" element={<ModernTickets />} />
+                  <Route path="/customer-new/tickets/:id" element={<ModernTicketDetail />} />
+                  <Route path="/customer-new/devices" element={<ModernDevices />} />
+                  <Route path="/customer-new/notifications" element={<ModernNotifications />} />
+                  <Route path="/customer-new/profile" element={<ModernProfile />} />
+                </Route>
+              </Route>
+
+
               {/* Staff routes */}
               <Route element={<ProtectedRoute roles={['STAFF']} />}>
                 <Route element={<StaffLayout />}>
@@ -102,8 +136,7 @@ export default function App() {
                 </Route>
               </Route>
               
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
         </NotificationProvider>
