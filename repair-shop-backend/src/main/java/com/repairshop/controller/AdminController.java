@@ -47,12 +47,13 @@ public class AdminController {
 
     @GetMapping("/staff")
     public ResponseEntity<ApiResponse<Page<StaffResponse>>> getStaff(@RequestParam(defaultValue = "0") int page,
-                                                                     @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.getStaff(page, size)));
     }
 
     @PutMapping("/staff/{id}")
-    public ResponseEntity<ApiResponse<StaffResponse>> updateStaff(@PathVariable Integer id, @Valid @RequestBody StaffRequest request) {
+    public ResponseEntity<ApiResponse<StaffResponse>> updateStaff(@PathVariable Integer id,
+            @Valid @RequestBody StaffRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.updateStaff(id, request)));
     }
 
@@ -62,21 +63,23 @@ public class AdminController {
     }
 
     @PutMapping("/staff/{id}/position")
-    public ResponseEntity<ApiResponse<StaffResponse>> updateStaffPosition(@PathVariable Integer id, @RequestParam String position) {
+    public ResponseEntity<ApiResponse<StaffResponse>> updateStaffPosition(@PathVariable Integer id,
+            @RequestParam String position) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.updateStaffPosition(id, position)));
     }
 
     @GetMapping("/staff/{id}/tickets")
     public ResponseEntity<ApiResponse<Page<TicketResponse>>> getStaffTickets(@PathVariable Integer id,
-                                                                             @RequestParam(defaultValue = "0") int page,
-                                                                             @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.getStaffTickets(id, page, size)));
     }
 
     @GetMapping("/customers")
-    public ResponseEntity<ApiResponse<Page<CustomerResponse>>> getCustomers(@RequestParam(required = false) String search,
-                                                                            @RequestParam(defaultValue = "0") int page,
-                                                                            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<ApiResponse<Page<CustomerResponse>>> getCustomers(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.getCustomers(search, page, size)));
     }
 
@@ -92,26 +95,27 @@ public class AdminController {
 
     @PutMapping("/customers/{id}")
     public ResponseEntity<ApiResponse<CustomerResponse>> updateCustomer(@PathVariable Integer id,
-                                                                        @RequestBody CustomerProfileRequest request) {
+            @RequestBody CustomerProfileRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.updateCustomer(id, request)));
     }
 
     @GetMapping("/customers/{id}/devices")
-    public ResponseEntity<ApiResponse<java.util.List<com.repairshop.dto.response.DeviceResponse>>> getCustomerDevices(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<java.util.List<com.repairshop.dto.response.DeviceResponse>>> getCustomerDevices(
+            @PathVariable Integer id) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.getCustomerDevices(id)));
     }
 
     @GetMapping("/customers/{id}/tickets")
     public ResponseEntity<ApiResponse<Page<TicketResponse>>> getCustomerTickets(@PathVariable Integer id,
-                                                                                 @RequestParam(defaultValue = "0") int page,
-                                                                                 @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.getCustomerTickets(id, page, size)));
     }
 
     @GetMapping("/inventory")
     public ResponseEntity<ApiResponse<Page<PartResponse>>> getInventory(@RequestParam(required = false) String search,
-                                                                        @RequestParam(defaultValue = "0") int page,
-                                                                        @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.getInventory(search, page, size)));
     }
 
@@ -122,31 +126,35 @@ public class AdminController {
 
     @PutMapping("/inventory/{id}")
     public ResponseEntity<ApiResponse<PartResponse>> updatePart(@PathVariable Integer id,
-                                                                @Valid @RequestBody CreatePartRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("Cập nhật linh kiện thành công", adminService.updatePart(id, request)));
+            @Valid @RequestBody CreatePartRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Cập nhật linh kiện thành công", adminService.updatePart(id, request)));
     }
 
     @PostMapping("/inventory/import")
-    public ResponseEntity<ApiResponse<InventoryTransactionResponse>> importStock(@Valid @RequestBody InventoryImportRequest request) {
+    public ResponseEntity<ApiResponse<InventoryTransactionResponse>> importStock(
+            @Valid @RequestBody InventoryImportRequest request) {
         Integer userId = getCurrentUser().getUserId();
         return ResponseEntity.ok(ApiResponse.success("Nhập kho thành công", adminService.importStock(request, userId)));
     }
 
     @GetMapping("/inventory/transactions")
-    public ResponseEntity<ApiResponse<Page<InventoryTransactionResponse>>> getInventoryTransactions(@RequestParam(defaultValue = "0") int page,
-                                                                                                    @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<ApiResponse<Page<InventoryTransactionResponse>>> getInventoryTransactions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success("Success", adminService.getInventoryTransactions(page, size)));
     }
 
     @GetMapping("/tickets")
     public ResponseEntity<ApiResponse<Page<TicketResponse>>> getTickets(@RequestParam(required = false) String status,
-                                                                        @RequestParam(required = false) Integer staffId,
-                                                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-                                                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
-                                                                        @RequestParam(required = false) String search,
-                                                                        @RequestParam(defaultValue = "0") int page,
-                                                                        @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(ApiResponse.success("Success", adminService.getTickets(status, staffId, from, to, search, page, size)));
+            @RequestParam(required = false) Integer staffId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(
+                ApiResponse.success("Success", adminService.getTickets(status, staffId, from, to, search, page, size)));
     }
 
     @GetMapping("/tickets/{id}")
@@ -156,9 +164,9 @@ public class AdminController {
 
     @PutMapping("/tickets/{id}/status")
     public ResponseEntity<ApiResponse<TicketResponse>> updateTicketStatus(@PathVariable Integer id,
-                                                                          @Valid @RequestBody UpdateTicketStatusRequest request) {
+            @Valid @RequestBody UpdateTicketStatusRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái thành công",
-            ticketService.updateStatus(id, request, getCurrentUser().getUserId())));
+                ticketService.updateStatus(id, request, getCurrentUser().getUserId())));
     }
 
     @GetMapping("/tickets/{id}/timeline")
@@ -168,25 +176,28 @@ public class AdminController {
 
     @PutMapping("/tickets/{id}/assign")
     public ResponseEntity<ApiResponse<TicketResponse>> assignStaff(@PathVariable Integer id,
-                                                                    @RequestParam Integer staffId) {
+            @RequestParam Integer staffId) {
         return ResponseEntity.ok(ApiResponse.success("Phân công nhân viên thành công",
-            adminService.assignStaffToTicket(id, staffId)));
+                adminService.assignStaffToTicket(id, staffId)));
     }
 
     @GetMapping("/invoices")
     public ResponseEntity<ApiResponse<Page<InvoiceResponse>>> getInvoices(@RequestParam(required = false) String status,
-                                                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-                                                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
-                                                                          @RequestParam(required = false) String search,
-                                                                          @RequestParam(defaultValue = "0") int page,
-                                                                          @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(ApiResponse.success("Success", adminService.getInvoices(status, from, to, search, page, size)));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Success", adminService.getInvoices(status, from, to, search, page, size)));
     }
 
-    @GetMapping("/invoices/{id}")
-    public ResponseEntity<ApiResponse<InvoiceResponse>> getInvoice(@PathVariable Integer id) {
-        return ResponseEntity.ok(ApiResponse.success("Success", adminService.getInvoice(id)));
-    }
+    // @GetMapping("/invoices/{id}")
+    // public ResponseEntity<ApiResponse<InvoiceResponse>> getInvoice(@PathVariable
+    // Integer id) {
+    // return ResponseEntity.ok(ApiResponse.success("Success",
+    // adminService.getInvoice(id)));
+    // }
 
     @PutMapping("/invoices/{id}/confirm-payment")
     public ResponseEntity<ApiResponse<InvoiceResponse>> confirmPayment(@PathVariable Integer id) {
@@ -220,7 +231,8 @@ public class AdminController {
     }
 
     @PostMapping("/notifications/broadcast")
-    public ResponseEntity<ApiResponse<Void>> broadcastNotification(@Valid @RequestBody BroadcastNotificationRequest request) {
+    public ResponseEntity<ApiResponse<Void>> broadcastNotification(
+            @Valid @RequestBody BroadcastNotificationRequest request) {
         adminService.broadcastNotification(request);
         return ResponseEntity.ok(ApiResponse.success("Success", null));
     }

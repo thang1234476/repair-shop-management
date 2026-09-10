@@ -121,13 +121,13 @@ export default function RoleLoginPage() {
 
           <Form name="role_login" onFinish={onFinish} layout="vertical">
             <Form.Item
-              name="username"
-              label={<span style={{ fontWeight: 600, color: '#334155' }}>Tên đăng nhập / Email</span>}
-              rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
+              name="email"
+              label={<span style={{ fontWeight: 600, color: '#334155' }}>Email</span>}
+              rules={[{ required: true, message: 'Vui lòng nhập email!' }]}
             >
               <Input
                 prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-                placeholder="Nhập username của bạn"
+                placeholder="Nhập email của bạn"
                 size="large"
                 style={{ height: 46 }}
               />
