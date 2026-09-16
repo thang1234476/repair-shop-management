@@ -15,7 +15,7 @@ import LandingPage from './pages/public/LandingPage';
 import RoleSelectionPage from './pages/public/RoleSelectionPage';
 import RoleLoginPage from './pages/public/RoleLoginPage';
 
-// Customer pages (Legacy UI — /customer/...)
+// Customer pages & Layout
 import CustomerLayout from './layouts/CustomerLayout';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
 import CustomerTickets from './pages/customer/CustomerTickets';
@@ -23,15 +23,6 @@ import CustomerTicketDetail from './pages/customer/CustomerTicketDetail';
 import CustomerDevices from './pages/customer/CustomerDevices';
 import CustomerProfile from './pages/customer/CustomerProfile';
 import CustomerNotifications from './pages/customer/CustomerNotifications';
-
-// Customer pages (Modern UI — /customer-new/...)
-import CustomerModernLayout from './layouts/CustomerModernLayout';
-import ModernDashboard from './pages/customer-modern/ModernDashboard';
-import ModernTickets from './pages/customer-modern/ModernTickets';
-import ModernTicketDetail from './pages/customer-modern/ModernTicketDetail';
-import ModernDevices from './pages/customer-modern/ModernDevices';
-import ModernProfile from './pages/customer-modern/ModernProfile';
-import ModernNotifications from './pages/customer-modern/ModernNotifications';
 
 // Staff pages
 import StaffLayout from './layouts/StaffLayout';
@@ -42,6 +33,7 @@ import StaffTicketDetail from './pages/staff/StaffTicketDetail';
 import StaffCustomers from './pages/staff/StaffCustomers';
 import StaffInventory from './pages/staff/StaffInventory';
 import StaffInvoices from './pages/staff/StaffInvoices';
+import StaffProfile from './pages/staff/StaffProfile';
 
 // Admin pages
 import AdminLayout from './layouts/AdminLayout';
@@ -86,27 +78,15 @@ export default function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/unauthorized" element={<UnauthorizedPage />} />
               
-              {/* ── Legacy Customer UI routes (/customer/...) — DO NOT MODIFY ── */}
+              {/* ── Customer UI routes (/customer/...) ── */}
               <Route element={<ProtectedRoute roles={['CUSTOMER']} />}>
                 <Route element={<CustomerLayout />}>
                   <Route path="/customer" element={<CustomerDashboard />} />
                   <Route path="/customer/tickets" element={<CustomerTickets />} />
                   <Route path="/customer/tickets/:id" element={<CustomerTicketDetail />} />
                   <Route path="/customer/devices" element={<CustomerDevices />} />
-                  <Route path="/customer/profile" element={<CustomerProfile />} />
                   <Route path="/customer/notifications" element={<CustomerNotifications />} />
-                </Route>
-              </Route>
-
-              {/* ── Modern Customer UI routes (/customer-new/...) ── */}
-              <Route element={<ProtectedRoute roles={['CUSTOMER']} />}>
-                <Route element={<CustomerModernLayout />}>
-                  <Route path="/customer-new" element={<ModernDashboard />} />
-                  <Route path="/customer-new/tickets" element={<ModernTickets />} />
-                  <Route path="/customer-new/tickets/:id" element={<ModernTicketDetail />} />
-                  <Route path="/customer-new/devices" element={<ModernDevices />} />
-                  <Route path="/customer-new/notifications" element={<ModernNotifications />} />
-                  <Route path="/customer-new/profile" element={<ModernProfile />} />
+                  <Route path="/customer/profile" element={<CustomerProfile />} />
                 </Route>
               </Route>
 
@@ -121,6 +101,7 @@ export default function App() {
                   <Route path="/staff/customers" element={<StaffCustomers />} />
                   <Route path="/staff/inventory" element={<StaffInventory />} />
                   <Route path="/staff/invoices" element={<StaffInvoices />} />
+                  <Route path="/staff/profile" element={<StaffProfile />} />
                 </Route>
               </Route>
               

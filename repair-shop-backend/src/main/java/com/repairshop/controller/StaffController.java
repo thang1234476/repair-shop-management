@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/staff")
@@ -45,11 +46,7 @@ public class StaffController {
 
     @PostMapping("/customers")
     public ResponseEntity<ApiResponse<CustomerResponse>> createCustomer(@Valid @RequestBody CreateCustomerRequest request) {
-        // Wait, where is createCustomer? We might need to call authService or adminService.
-        // Actually, let's keep it simple. It might be missing from our implementations.
-        // The prompt only asked me to fix compilation errors and implement stubs.
-        // Let's create it in authService or just return null if it doesn't compile.
-        return null;
+        return ResponseEntity.ok(ApiResponse.success("Tạo khách hàng thành công", customerService.createCustomer(request)));
     }
 
     @GetMapping("/customers")
@@ -64,6 +61,11 @@ public class StaffController {
         return ResponseEntity.ok(ApiResponse.success("Success", customerService.updateProfile(id, request)));
     }
 
+    @GetMapping("/customers/{id}/devices")
+    public ResponseEntity<ApiResponse<List<DeviceResponse>>> getCustomerDevices(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.success("Success", deviceService.getCustomerDevices(id)));
+    }
+
     @PostMapping("/devices")
     public ResponseEntity<ApiResponse<DeviceResponse>> addDevice(@Valid @RequestBody DeviceRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Success", deviceService.createDeviceForCustomer(request)));
@@ -72,6 +74,16 @@ public class StaffController {
     @PostMapping("/tickets")
     public ResponseEntity<ApiResponse<TicketResponse>> createTicket(@Valid @RequestBody CreateTicketRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Success", ticketService.createTicket(request, getCurrentUser().getUserId())));
+    }
+
+    @GetMapping("/tickets/{id}")
+    public ResponseEntity<ApiResponse<TicketResponse>> getTicket(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.success("Success", ticketService.getTicket(id)));
+    }
+
+    @GetMapping("/tickets/{id}/timeline")
+    public ResponseEntity<ApiResponse<?>> getTicketTimeline(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.success("Success", ticketService.getTicketTimeline(id)));
     }
 
     @PutMapping("/tickets/{id}/status")
@@ -87,6 +99,17 @@ public class StaffController {
     @PostMapping("/tickets/{id}/quote")
     public ResponseEntity<ApiResponse<QuoteResponse>> createQuote(@PathVariable Integer id, @Valid @RequestBody CreateQuoteRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Success", quoteService.createQuote(id, request, getCurrentUser().getUserId())));
+    }
+
+    @GetMapping("/tickets/{id}/quote")
+    public ResponseEntity<ApiResponse<QuoteResponse>> getQuote(@PathVariable Integer id) {
+        List<QuoteResponse> quotes = quoteService.getQuotesByTicket(id);
+        return ResponseEntity.ok(ApiResponse.success("Success", quotes.isEmpty() ? null : quotes.get(quotes.size() - 1)));
+    }
+
+    @GetMapping("/tickets/{id}/invoice")
+    public ResponseEntity<ApiResponse<InvoiceResponse>> getInvoiceByTicket(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.success("Success", invoiceService.getInvoiceByTicketId(id)));
     }
 
     @PutMapping("/tickets/{id}/close")
@@ -120,6 +143,12 @@ public class StaffController {
     @PostMapping("/invoices")
     public ResponseEntity<ApiResponse<InvoiceResponse>> createInvoice(@Valid @RequestBody CreateInvoiceRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Success", invoiceService.createInvoice(request, getCurrentUser().getUserId())));
+    }
+
+    @GetMapping("/invoices")
+    public ResponseEntity<ApiResponse<Page<InvoiceResponse>>> getInvoices(@RequestParam(defaultValue = "0") int page,
+                                                                          @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.success("Success", invoiceService.getAllInvoices(null, null, null, null, PageRequest.of(page, size))));
     }
 
     @PostMapping("/payments")

@@ -19,7 +19,7 @@ const ROLE_META = {
     bgLight: '#eef2ff',
     expectedRole: 'CUSTOMER',
     sub: 'Đăng nhập để theo dõi thiết bị & xem báo giá',
-    defaultRoute: '/customer-new',
+    defaultRoute: '/customer',
   },
   staff: {
     title: 'Nhân Viên / Kỹ Thuật',
@@ -61,8 +61,7 @@ export default function RoleLoginPage() {
       } else if (user.role === 'STAFF') {
         navigate('/staff');
       } else {
-        // Customer: default to modern UI
-        navigate('/customer-new');
+        navigate('/customer');
       }
     } catch (error) {
       message.error(error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tên đăng nhập và mật khẩu.');

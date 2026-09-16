@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HistoryOutlined } from '@ant-design/icons';
+import { HistoryOutlined, EditOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { DeviceIcon } from './TicketCard';
 import { formatDateOnly } from '../../utils/helpers';
 
@@ -23,18 +23,33 @@ function getDeviceTypeLabel(type) {
 /**
  * DeviceCard — Card hiển thị một thiết bị của khách hàng
  */
-export default function DeviceCard({ device, basePath = '/customer-new' }) {
+export default function DeviceCard({
+  device,
+  basePath = '/customer',
+  onEdit,
+  onViewDetail,
+  onViewHistory
+}) {
   const navigate = useNavigate();
   const repairCount = device.repairCount ?? 0;
   const lastRepair = device.lastRepairDate;
 
+  const handleCardClick = () => {
+    if (onViewDetail) {
+      onViewDetail(device);
+    } else {
+      navigate(`${basePath}/devices`);
+    }
+  };
+
   return (
     <div
       className="mc-device-card"
-      onClick={() => navigate(`${basePath}/devices`)}
+      onClick={handleCardClick}
       role="button"
       tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && navigate(`${basePath}/devices`)}
+      onKeyDown={e => e.key === 'Enter' && handleCardClick()}
+      style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
     >
       {/* Icon */}
       <div className="mc-device-icon-wrap">
@@ -57,12 +72,13 @@ export default function DeviceCard({ device, basePath = '/customer-new' }) {
         display: 'inline-block',
         padding: '2px 10px',
         borderRadius: 100,
+        alignSelf: 'flex-start',
       }}>
         {getDeviceTypeLabel(device.deviceType)}
       </div>
 
       {/* Divider */}
-      <div className="mc-divider" style={{ marginBottom: 12 }} />
+      <div className="mc-divider" style={{ marginBottom: 12, marginTop: 'auto' }} />
 
       {/* Stats */}
       <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>
@@ -75,15 +91,47 @@ export default function DeviceCard({ device, basePath = '/customer-new' }) {
         </div>
       )}
 
-      {/* Button */}
-      <button
-        className="mc-btn-secondary"
-        style={{ width: '100%', justifyContent: 'center' }}
-        onClick={e => { e.stopPropagation(); navigate(`${basePath}/devices`); }}
-      >
-        <HistoryOutlined style={{ fontSize: 14 }} />
-        Xem lịch sử
-      </button>
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }} onClick={e => e.stopPropagation()}>
+        {onViewDetail && (
+          <button
+            className="mc-btn-secondary"
+            style={{ flex: 1, padding: '6px 8px', fontSize: 12, justifyContent: 'center' }}
+            onClick={() => onViewDetail(device)}
+          >
+            <InfoCircleOutlined /> Chi tiết
+          </button>
+        )}
+        {onViewHistory && (
+          <button
+            className="mc-btn-secondary"
+            style={{ flex: 1, padding: '6px 8px', fontSize: 12, justifyContent: 'center' }}
+            onClick={() => onViewHistory(device)}
+          >
+            <HistoryOutlined /> Lịch sử
+          </button>
+        )}
+        {onEdit && (
+          <button
+            className="mc-btn-secondary"
+            style={{ padding: '6px 10px', fontSize: 12, justifyContent: 'center', color: '#4f46e5' }}
+            onClick={() => onEdit(device)}
+            title="Chỉnh sửa thiết bị"
+          >
+            <EditOutlined /> Sửa
+          </button>
+        )}
+        {!onViewDetail && !onViewHistory && !onEdit && (
+          <button
+            className="mc-btn-secondary"
+            style={{ width: '100%', justifyContent: 'center' }}
+            onClick={() => navigate(`${basePath}/devices`)}
+          >
+            <HistoryOutlined style={{ fontSize: 14 }} />
+            Xem lịch sử
+          </button>
+        )}
+      </div>
     </div>
   );
 }

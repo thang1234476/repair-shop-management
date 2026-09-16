@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
  * ActionAlert — Banner thông báo hành động cần thực hiện
  * Ví dụ: "Bạn có 1 báo giá chờ xác nhận"
  */
-export default function ActionAlert({ ticketId, ticketCode, basePath = '/customer-new' }) {
+export default function ActionAlert({ ticketId, ticketCode, basePath = '/customer' }) {
   const navigate = useNavigate();
 
   if (!ticketId) return null;

@@ -196,7 +196,7 @@ export default function TrackRepairSection() {
                 style={{ flex: 1, borderRadius: 10, background: '#4f46e5', borderColor: '#4f46e5' }}
                 onClick={() => {
                   setModalOpen(false);
-                  navigate(`/customer-new/tickets/${ticketResult.id}`);
+                  navigate(`/customer/tickets/${ticketResult.id}`);
                 }}
               >
                 Chi Tiết Phiếu <ArrowRightOutlined />

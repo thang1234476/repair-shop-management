@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Avatar, Dropdown } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { HomeOutlined, FileTextOutlined, TeamOutlined, AppstoreOutlined, ContainerOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { HomeOutlined, FileTextOutlined, TeamOutlined, AppstoreOutlined, ContainerOutlined, UserOutlined, LogoutOutlined, ProfileOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 
 const { Header, Sider, Content } = Layout;
@@ -27,6 +27,8 @@ export default function StaffLayout() {
 
   const profileMenu = {
     items: [
+      { key: 'profile', icon: <ProfileOutlined />, label: 'Hồ sơ cá nhân', onClick: () => navigate('/staff/profile') },
+      { type: 'divider' },
       { key: 'logout', icon: <LogoutOutlined />, label: 'Đăng xuất', onClick: handleLogout }
     ]
   };

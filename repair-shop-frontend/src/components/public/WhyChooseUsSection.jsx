@@ -15,7 +15,7 @@ const REASONS = [
   {
     icon: <EyeOutlined />,
     title: 'Theo Dõi Tiến Độ Trực Tuyến',
-    desc: 'Không cần gọi điện thoại hỏi thăm. Chỉ cần nhập mã phiếu để xem thiết bị đang ở giai đoạn nào: kiểm tra, chờ linh kiện hay đã xong.',
+    desc: 'Không cần gọi điện thoại hỏi thăm. Dễ dàng đăng nhập theo dõi thiết bị đang ở giai đoạn nào: kiểm tra, chờ linh kiện hay đã xong.',
   },
   {
     icon: <TeamOutlined />,

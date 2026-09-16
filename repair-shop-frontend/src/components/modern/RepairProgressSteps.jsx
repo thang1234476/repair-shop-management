@@ -1,5 +1,5 @@
 import React from 'react';
-import { Steps, Tooltip } from 'antd';
+import { Steps, Tooltip, Alert, Tag } from 'antd';
 import {
   InboxOutlined,
   SearchOutlined,
@@ -8,6 +8,8 @@ import {
   ToolOutlined,
   SmileOutlined,
   GiftOutlined,
+  CloseCircleOutlined,
+  StopOutlined,
 } from '@ant-design/icons';
 
 const STEPS = [
@@ -32,6 +34,48 @@ const STATUS_ORDER = {
  * @param {boolean} vertical - Hiển thị vertical (dùng trong mobile)
  */
 export default function RepairProgressSteps({ status, compact = false, vertical = false }) {
+  if (status === 'CANCELLED' || status === 'REJECTED') {
+    const isCancelled = status === 'CANCELLED';
+    const title = isCancelled ? 'Phiếu đã hủy' : 'Đã từ chối báo giá';
+    const desc = isCancelled
+      ? 'Phiếu sửa chữa này đã bị hủy. Tiến trình xử lý đã dừng lại.'
+      : 'Báo giá sửa chữa đã bị từ chối. Vui lòng liên hệ trung tâm để được hỗ trợ lại.';
+
+    if (compact) {
+      return (
+        <div style={{
+          marginTop: 10,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '4px 10px',
+          borderRadius: 6,
+          backgroundColor: isCancelled ? '#fef2f2' : '#fffbeb',
+          border: `1px solid ${isCancelled ? '#fecaca' : '#fde68a'}`,
+          color: isCancelled ? '#dc2626' : '#d97706',
+          fontSize: 12,
+          fontWeight: 600,
+        }}>
+          {isCancelled ? <CloseCircleOutlined /> : <StopOutlined />}
+          <span>{title}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mc-progress-steps" style={{ margin: '8px 0' }}>
+        <Alert
+          type={isCancelled ? 'error' : 'warning'}
+          showIcon
+          icon={isCancelled ? <CloseCircleOutlined /> : <StopOutlined />}
+          message={<span style={{ fontWeight: 600 }}>{title}</span>}
+          description={desc}
+          style={{ borderRadius: 8 }}
+        />
+      </div>
+    );
+  }
+
   const currentIndex = STATUS_ORDER[status] ?? 0;
 
   const items = STEPS.map((step, idx) => {

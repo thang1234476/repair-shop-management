@@ -12,6 +12,8 @@ public class TicketResponse {
     private String deviceType;
     private String deviceBrand;
     private String deviceModel;
+    private String deviceSerialNumber;
+    private String serialNumber;
     private Integer staffId;
     private String staffName;
     private String status;

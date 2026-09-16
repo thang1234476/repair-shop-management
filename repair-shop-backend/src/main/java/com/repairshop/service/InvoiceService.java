@@ -10,6 +10,7 @@ public interface InvoiceService {
     InvoiceResponse createInvoice(CreateInvoiceRequest request, Integer staffId);
     PaymentResponse recordPayment(CreatePaymentRequest request, Integer receivedById);
     InvoiceResponse getInvoice(Integer invoiceId);
+    InvoiceResponse getInvoiceByTicketId(Integer ticketId);
     Page<InvoiceResponse> getAllInvoices(InvoiceStatus status, LocalDateTime from, LocalDateTime to, String search, Pageable pageable);
     byte[] exportInvoicePdf(Integer invoiceId);
     InvoiceResponse confirmPayment(Integer invoiceId);

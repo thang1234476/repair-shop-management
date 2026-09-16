@@ -10,6 +10,10 @@ export const ticketApi = {
   rejectQuote: (id, data) => api.put(`/customer/quotes/${id}/reject`, data),
   // Staff
   createTicket: (data) => api.post('/staff/tickets', data),
+  getStaffTicket: (id) => api.get(`/staff/tickets/${id}`),
+  getStaffTicketTimeline: (id) => api.get(`/staff/tickets/${id}/timeline`),
+  getStaffTicketQuote: (id) => api.get(`/staff/tickets/${id}/quote`),
+  getStaffTicketInvoice: (id) => api.get(`/staff/tickets/${id}/invoice`),
   updateTicketStatus: (id, data) => api.put(`/staff/tickets/${id}/status`, data),
   updateDiagnosis: (id, data) => api.put(`/staff/tickets/${id}/diagnosis`, data),
   createQuote: (id, data) => api.post(`/staff/tickets/${id}/quote`, data),

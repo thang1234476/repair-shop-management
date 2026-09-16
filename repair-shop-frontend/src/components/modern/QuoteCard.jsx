@@ -6,6 +6,12 @@ import { formatCurrency } from '../../utils/helpers';
 
 const { confirm } = Modal;
 
+const ITEM_TYPE_LABELS = {
+  PART: { label: 'Linh kiện', color: '#1d4ed8', bg: '#dbeafe' },
+  LABOR: { label: 'Công thợ', color: '#047857', bg: '#d1fae5' },
+  OTHER: { label: 'Chi phí khác', color: '#4b5563', bg: '#f3f4f6' },
+};
+
 /**
  * QuoteCard — Hiển thị báo giá và nút xác nhận/từ chối
  * @param {object} quote - Dữ liệu báo giá từ API
@@ -18,6 +24,7 @@ export default function QuoteCard({ quote, onAction }) {
 
   if (!quote) return null;
 
+  const quoteId = quote.quoteId || quote.id;
   const isPending = quote.status === 'PENDING';
   const isAccepted = quote.status === 'ACCEPTED';
   const isRejected = quote.status === 'REJECTED';
@@ -40,7 +47,7 @@ export default function QuoteCard({ quote, onAction }) {
       async onOk() {
         setLoading(true);
         try {
-          await ticketApi.acceptQuote(quote.id, { notes: 'Khách hàng đồng ý' });
+          await ticketApi.acceptQuote(quoteId, { customerNote: 'Khách hàng đồng ý sửa chữa' });
           antMessage.success('✅ Đã xác nhận báo giá!');
           onAction?.();
         } catch {
@@ -59,7 +66,7 @@ export default function QuoteCard({ quote, onAction }) {
     }
     setLoading(true);
     try {
-      await ticketApi.rejectQuote(quote.id, { reason: rejectReason });
+      await ticketApi.rejectQuote(quoteId, { customerNote: rejectReason });
       antMessage.success('Đã từ chối báo giá');
       setShowRejectInput(false);
       onAction?.();
@@ -110,35 +117,70 @@ export default function QuoteCard({ quote, onAction }) {
           )}
         </div>
 
-        {/* Breakdown */}
-        <div className="mc-quote-breakdown">
-          {quote.laborCost != null && (
-            <div className="mc-quote-row">
-              <span>Công sửa chữa</span>
-              <strong>{formatCurrency(quote.laborCost)}</strong>
-            </div>
-          )}
-          {quote.partsCost != null && (
-            <div className="mc-quote-row">
-              <span>Chi phí linh kiện</span>
-              <strong>{formatCurrency(quote.partsCost)}</strong>
-            </div>
-          )}
-          <div className="mc-quote-row" style={{ paddingTop: 8, borderTop: '1px solid #e5e7eb', marginTop: 4 }}>
-            <span style={{ fontWeight: 600, color: '#111827' }}>Tổng cộng</span>
-            <strong style={{ color: '#4f46e5', fontSize: 16 }}>{formatCurrency(quote.totalAmount)}</strong>
+        {/* Itemized Breakdown Table (quote.items) */}
+        {quote.items && quote.items.length > 0 ? (
+          <div style={{ margin: '14px 0', overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #e5e7eb', color: '#6b7280', textAlign: 'left' }}>
+                  <th style={{ padding: '8px 4px' }}>Phân loại</th>
+                  <th style={{ padding: '8px 4px' }}>Hạng mục</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>SL</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'right' }}>Đơn giá</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'right' }}>Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                {quote.items.map((item, idx) => {
+                  const typeMeta = ITEM_TYPE_LABELS[item.itemType] || { label: item.itemType, color: '#374151', bg: '#f3f4f6' };
+                  return (
+                    <tr key={item.quoteItemId || idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                      <td style={{ padding: '8px 4px' }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 600,
+                          color: typeMeta.color, background: typeMeta.bg,
+                          padding: '2px 6px', borderRadius: 4, whiteSpace: 'nowrap'
+                        }}>
+                          {typeMeta.label}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 4px', color: '#111827', fontWeight: 500 }}>
+                        {item.partName ? `${item.partName} - ${item.description}` : item.description}
+                      </td>
+                      <td style={{ padding: '8px 4px', textAlign: 'center', color: '#4b5563' }}>
+                        {item.quantity}
+                      </td>
+                      <td style={{ padding: '8px 4px', textAlign: 'right', color: '#4b5563' }}>
+                        {formatCurrency(item.unitPrice)}
+                      </td>
+                      <td style={{ padding: '8px 4px', textAlign: 'right', fontWeight: 600, color: '#111827' }}>
+                        {formatCurrency(item.subtotal || (item.quantity * item.unitPrice))}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {/* Total row */}
+        <div className="mc-quote-breakdown" style={{ marginTop: 10 }}>
+          <div className="mc-quote-row" style={{ paddingTop: 8, borderTop: '2px solid #e5e7eb' }}>
+            <span style={{ fontWeight: 700, color: '#111827', fontSize: 14 }}>Tổng cộng</span>
+            <strong style={{ color: '#4f46e5', fontSize: 17 }}>{formatCurrency(quote.totalAmount)}</strong>
           </div>
         </div>
 
         {/* Notes */}
-        {quote.notes && (
+        {quote.customerNote && (
           <div style={{
-            marginTop: 16, padding: '10px 14px',
+            marginTop: 14, padding: '10px 14px',
             background: '#f9fafb', borderRadius: 8,
             fontSize: 13, color: '#6b7280',
             borderLeft: '3px solid #e5e7eb',
           }}>
-            <strong style={{ color: '#374151' }}>Ghi chú:</strong> {quote.notes}
+            <strong style={{ color: '#374151' }}>Ghi chú của khách:</strong> {quote.customerNote}
           </div>
         )}
 
