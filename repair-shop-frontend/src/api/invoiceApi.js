@@ -1,5 +1,6 @@
 import api from './axiosInstance';
 export const invoiceApi = {
+  getStaffInvoices: (params) => api.get('/staff/invoices', { params }),
   createInvoice: (data) => api.post('/staff/invoices', data),
   createPayment: (data) => api.post('/staff/payments', data),
   getInvoice: (id) => api.get(`/staff/invoices/${id}`),

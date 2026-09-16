@@ -19,6 +19,7 @@ const STATUS_LABELS = {
   COMPLETED:  'Đã sửa xong',
   DELIVERED:  'Đã bàn giao',
   CANCELLED:  'Đã hủy',
+  REJECTED:   'Đã từ chối',
 };
 
 function DeviceIcon({ deviceType, size = 24 }) {
@@ -43,19 +44,23 @@ function relativeTimeStr(date) {
 /**
  * TicketCard — Card hiển thị một phiếu sửa chữa
  */
-export default function TicketCard({ ticket, basePath = '/customer-new' }) {
+export default function TicketCard({ ticket, basePath = '/customer' }) {
   const navigate = useNavigate();
+  const ticketId = ticket.ticketId || ticket.id;
   const statusClass = `status-${ticket.status?.toLowerCase()}`;
   const label = STATUS_LABELS[ticket.status] || ticket.status;
-  const isActive = !['COMPLETED', 'DELIVERED', 'CANCELLED'].includes(ticket.status);
+  const isActive = !['COMPLETED', 'DELIVERED', 'CANCELLED', 'REJECTED'].includes(ticket.status);
+  const deviceType = ticket.deviceType || ticket.device?.deviceType;
+  const brand = ticket.deviceBrand || ticket.device?.brand || '';
+  const model = ticket.deviceModel || ticket.device?.model || '';
 
   return (
     <div
       className={`mc-ticket-card ${statusClass}`}
-      onClick={() => navigate(`${basePath}/tickets/${ticket.id}`)}
+      onClick={() => navigate(`${basePath}/tickets/${ticketId}`)}
       role="button"
       tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && navigate(`${basePath}/tickets/${ticket.id}`)}
+      onKeyDown={e => e.key === 'Enter' && navigate(`${basePath}/tickets/${ticketId}`)}
     >
       {/* Header */}
       <div className="mc-flex-between mc-gap-12 mc-mb-12">
@@ -65,14 +70,15 @@ export default function TicketCard({ ticket, basePath = '/customer-new' }) {
             background: '#eef2ff', display: 'flex',
             alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
-            <DeviceIcon deviceType={ticket.device?.deviceType} size={22} />
+            <DeviceIcon deviceType={deviceType} size={22} />
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.3 }}>
-              {ticket.device?.brand} {ticket.device?.model}
+              {brand} {model}
             </div>
             <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
               {ticket.ticketCode}
+              {(ticket.deviceSerialNumber || ticket.serialNumber) && ` · S/N: ${ticket.deviceSerialNumber || ticket.serialNumber}`}
             </div>
           </div>
         </div>

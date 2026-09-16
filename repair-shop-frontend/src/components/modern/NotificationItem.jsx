@@ -29,18 +29,21 @@ function getIconBg(type) {
 /**
  * NotificationItem — Một item thông báo
  */
-export default function NotificationItem({ notification, onMarkRead, basePath = '/customer-new' }) {
+export default function NotificationItem({ notification, onMarkRead, basePath = '/customer' }) {
   const navigate = useNavigate();
-  const { id, title, message, type, read, createdAt, ticketId } = notification;
+  const notifId = notification.notificationId ?? notification.id;
+  const isRead = notification.isRead ?? notification.read;
+  const ticketId = notification.relatedTicketId ?? notification.ticketId;
+  const { title, message, type, createdAt } = notification;
 
   const handleClick = () => {
-    if (!read && onMarkRead) onMarkRead(id);
+    if (!isRead && onMarkRead) onMarkRead(notifId);
     if (ticketId) navigate(`${basePath}/tickets/${ticketId}`);
   };
 
   return (
     <div
-      className={`mc-notif-item${read ? '' : ' unread'}`}
+      className={`mc-notif-item${isRead ? '' : ' unread'}`}
       onClick={handleClick}
       role="button"
       tabIndex={0}
@@ -63,7 +66,7 @@ export default function NotificationItem({ notification, onMarkRead, basePath = 
 
       {/* Unread dot + navigate */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
-        {!read && (
+        {!isRead && (
           <div style={{
             width: 8, height: 8, borderRadius: '50%',
             background: '#4f46e5', flexShrink: 0,

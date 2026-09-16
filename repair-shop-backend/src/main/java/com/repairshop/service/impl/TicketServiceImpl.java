@@ -199,6 +199,8 @@ public class TicketServiceImpl implements TicketService {
             r.setDeviceType(t.getDevice().getDeviceType());
             r.setDeviceBrand(t.getDevice().getBrand());
             r.setDeviceModel(t.getDevice().getModel());
+            r.setDeviceSerialNumber(t.getDevice().getSerialNumber());
+            r.setSerialNumber(t.getDevice().getSerialNumber());
         }
         if (t.getStaff() != null) {
             r.setStaffId(t.getStaff().getStaffId());

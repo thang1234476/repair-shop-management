@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { ConfigProvider, theme } from 'antd';
 import PublicHeader from '../components/public/PublicHeader';
 import PublicFooter from '../components/public/PublicFooter';
-import BookingModal from '../components/public/BookingModal';
 import '../styles/public-landing.css';
 
 const PUBLIC_THEME = {
@@ -34,8 +33,6 @@ const PUBLIC_THEME = {
 };
 
 export default function PublicLayout() {
-  const [bookingOpen, setBookingOpen] = useState(false);
-
   const handleScrollToSection = (sectionId) => {
     const el = document.getElementById(sectionId);
     if (el) {
@@ -47,22 +44,15 @@ export default function PublicLayout() {
     <ConfigProvider theme={PUBLIC_THEME}>
       <div className="public-root">
         <PublicHeader
-          onOpenBooking={() => setBookingOpen(true)}
           onScrollToSection={handleScrollToSection}
         />
 
         <main style={{ flex: 1 }}>
-          <Outlet context={{ onOpenBooking: () => setBookingOpen(true), onScrollToSection: handleScrollToSection }} />
+          <Outlet context={{ onScrollToSection: handleScrollToSection }} />
         </main>
 
         <PublicFooter
-          onOpenBooking={() => setBookingOpen(true)}
           onScrollToSection={handleScrollToSection}
-        />
-
-        <BookingModal
-          open={bookingOpen}
-          onCancel={() => setBookingOpen(false)}
         />
       </div>
     </ConfigProvider>

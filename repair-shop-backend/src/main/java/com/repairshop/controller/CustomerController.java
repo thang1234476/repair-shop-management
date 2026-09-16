@@ -35,6 +35,11 @@ public class CustomerController {
         return (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<CustomerProfileResponse>> getProfile() {
+        return ResponseEntity.ok(ApiResponse.success("Success", customerService.getCustomerProfile(getCurrentUser().getUserId())));
+    }
+
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<CustomerResponse>> updateProfile(@Valid @RequestBody CustomerProfileRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Success", customerService.updateProfile(getCurrentUser().getUserId(), request)));

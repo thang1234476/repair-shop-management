@@ -1,5 +1,6 @@
 import api from './axiosInstance';
 export const customerApi = {
+  getProfile: () => api.get('/customer/profile'),
   updateProfile: (data) => api.put('/customer/profile', data),
   getMyDevices: () => api.get('/customer/devices'),
   getMyDevice: (id) => api.get(`/customer/devices/${id}`),
@@ -12,6 +13,8 @@ export const customerApi = {
   getCustomers: (params) => api.get('/staff/customers', { params }),
   createCustomer: (data) => api.post('/staff/customers', data),
   updateCustomer: (id, data) => api.put(`/staff/customers/${id}`, data),
+  getStaffCustomerDevices: (id) => api.get(`/staff/customers/${id}/devices`),
+  createStaffDevice: (data) => api.post('/staff/devices', data),
   // Admin
   getAdminCustomers: (params) => api.get('/admin/customers', { params }),
   getAdminCustomer: (id) => api.get(`/admin/customers/${id}`),

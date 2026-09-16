@@ -4,13 +4,11 @@ import { Drawer, Button } from 'antd';
 import {
   ToolOutlined,
   MenuOutlined,
-  SearchOutlined,
   UserOutlined,
-  CalendarOutlined,
   CloseOutlined
 } from '@ant-design/icons';
 
-export default function PublicHeader({ onOpenBooking, onScrollToSection }) {
+export default function PublicHeader({ onScrollToSection }) {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -60,34 +58,10 @@ export default function PublicHeader({ onOpenBooking, onScrollToSection }) {
           {/* Actions */}
           <div className="pub-header-actions">
             <button
-              className="pub-btn pub-btn-secondary"
-              onClick={() => handleNavClick('track-ticket')}
-              style={{ display: 'none', md: 'inline-flex' }}
-            >
-              <SearchOutlined /> Tra cứu phiếu
-            </button>
-
-            <button
-              className="pub-btn pub-btn-outline"
+              className="pub-btn pub-btn-primary"
               onClick={() => navigate('/login')}
             >
               <UserOutlined /> Đăng nhập
-            </button>
-
-            <button
-              className="pub-btn pub-btn-primary"
-              onClick={onOpenBooking}
-            >
-              <CalendarOutlined /> Đặt lịch
-            </button>
-
-            {/* Mobile Hamburger */}
-            <button
-              className="pub-btn pub-btn-secondary"
-              style={{ padding: '8px 12px', display: 'flex' }}
-              onClick={() => setMobileMenuOpen(true)}
-            >
-              <MenuOutlined style={{ fontSize: 18 }} />
             </button>
           </div>
         </div>
@@ -143,13 +117,6 @@ export default function PublicHeader({ onOpenBooking, onScrollToSection }) {
           <div
             className="pub-nav-item"
             style={{ fontSize: 16, padding: '12px 16px' }}
-            onClick={() => handleNavClick('track-ticket')}
-          >
-            🔍 Tra cứu phiếu sửa chữa
-          </div>
-          <div
-            className="pub-nav-item"
-            style={{ fontSize: 16, padding: '12px 16px' }}
             onClick={() => handleNavClick('footer')}
           >
             Thông tin liên hệ
@@ -158,7 +125,7 @@ export default function PublicHeader({ onOpenBooking, onScrollToSection }) {
           <div style={{ height: 1, background: '#e2e8f0', margin: '16px 0' }} />
 
           <button
-            className="pub-btn pub-btn-outline"
+            className="pub-btn pub-btn-primary"
             style={{ width: '100%', justifyContent: 'center' }}
             onClick={() => {
               setMobileMenuOpen(false);
@@ -166,17 +133,6 @@ export default function PublicHeader({ onOpenBooking, onScrollToSection }) {
             }}
           >
             <UserOutlined /> Đăng nhập hệ thống
-          </button>
-
-          <button
-            className="pub-btn pub-btn-primary"
-            style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
-            onClick={() => {
-              setMobileMenuOpen(false);
-              onOpenBooking();
-            }}
-          >
-            <CalendarOutlined /> Đặt lịch hẹn sửa chữa
           </button>
         </div>
       </Drawer>

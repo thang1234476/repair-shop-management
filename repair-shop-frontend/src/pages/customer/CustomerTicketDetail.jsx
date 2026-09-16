@@ -1,88 +1,332 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Descriptions, Steps, Button, message, Spin, Space } from 'antd';
-import { useParams } from 'react-router-dom';
+import { Spin, message, Timeline as AntTimeline, Divider } from 'antd';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  ArrowLeftOutlined, LaptopOutlined, ToolOutlined,
+  FileTextOutlined, QrcodeOutlined, ClockCircleOutlined,
+  InfoCircleOutlined,
+} from '@ant-design/icons';
 import { ticketApi } from '../../api/ticketApi';
-import { TicketStatusBadge } from '../../components/StatusBadge';
-import { formatDate, formatCurrency } from '../../utils/helpers';
+import { DeviceIcon } from '../../components/modern/TicketCard';
+import RepairProgressSteps from '../../components/modern/RepairProgressSteps';
+import QuoteCard from '../../components/modern/QuoteCard';
+import { formatDate } from '../../utils/helpers';
 import { QRCodeSVG } from 'qrcode.react';
 
-const { Step } = Steps;
+const STATUS_LABELS = {
+  RECEIVED:   'Đã tiếp nhận',
+  DIAGNOSING: 'Đang kiểm tra',
+  QUOTED:     'Đã có báo giá',
+  APPROVED:   'Đã xác nhận',
+  REPAIRING:  'Đang sửa chữa',
+  COMPLETED:  'Đã sửa xong',
+  DELIVERED:  'Đã bàn giao',
+  CANCELLED:  'Đã hủy',
+  REJECTED:   'Đã từ chối',
+};
+
+function SectionCard({ icon, title, children }) {
+  return (
+    <div className="mc-card mc-mb-16">
+      <div className="mc-card-title">
+        <span style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: '#eef2ff', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          color: '#4f46e5', fontSize: 15, flexShrink: 0,
+        }}>
+          {icon}
+        </span>
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function CustomerTicketDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [ticket, setTicket] = useState(null);
   const [quote, setQuote] = useState(null);
+  const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) fetchDetail();
+    if (id) fetchAll();
   }, [id]);
 
-  const fetchDetail = async () => {
+  const fetchAll = async () => {
+    setLoading(true);
     try {
-      const [ticketRes, quoteRes] = await Promise.all([
+      const [ticketRes, quoteRes, timelineRes] = await Promise.all([
         ticketApi.getMyTicket(id),
-        ticketApi.getTicketQuote(id).catch(() => ({ data: { data: null } }))
+        ticketApi.getTicketQuote(id).catch(() => ({ data: { data: null } })),
+        ticketApi.getTicketTimeline(id).catch(() => ({ data: { data: [] } })),
       ]);
       setTicket(ticketRes.data.data);
       setQuote(quoteRes.data.data);
-    } catch (error) {
+      setTimeline(timelineRes.data.data || []);
+    } catch {
       message.error('Lỗi khi tải chi tiết phiếu');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAcceptQuote = async () => {
-    try {
-      await ticketApi.acceptQuote(quote.id, { notes: 'Đồng ý' });
-      message.success('Đã xác nhận báo giá');
-      fetchDetail();
-    } catch (error) {
-      message.error('Lỗi khi xác nhận báo giá');
-    }
-  };
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
-  const handleRejectQuote = async () => {
-    try {
-      await ticketApi.rejectQuote(quote.id, { reason: 'Không đồng ý' });
-      message.success('Đã từ chối báo giá');
-      fetchDetail();
-    } catch (error) {
-      message.error('Lỗi khi từ chối báo giá');
-    }
-  };
+  if (!ticket) {
+    return (
+      <div className="mc-card" style={{ textAlign: 'center', padding: 64 }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>😕</div>
+        <p style={{ fontSize: 16, color: '#6b7280' }}>Không tìm thấy phiếu sửa chữa</p>
+        <button className="mc-btn-secondary" onClick={() => navigate('/customer/tickets')}>
+          <ArrowLeftOutlined /> Quay lại
+        </button>
+      </div>
+    );
+  }
 
-  if (loading) return <Spin size="large" />;
-  if (!ticket) return <div>Không tìm thấy phiếu</div>;
+  const statusLabel = STATUS_LABELS[ticket.status] || ticket.status;
+  const isPendingQuote = ticket.status === 'QUOTED' && quote?.status === 'PENDING';
+
+  // Build timeline items for Ant Timeline
+  const timelineItems = timeline.length > 0
+    ? timeline.map(item => ({
+        dot: (
+          <ClockCircleOutlined
+            style={{
+              fontSize: 14,
+              color: item.status === 'CANCELLED' || item.status === 'REJECTED' ? '#ef4444' : '#4f46e5',
+            }}
+          />
+        ),
+        color: item.status === 'CANCELLED' || item.status === 'REJECTED' ? 'red' : 'blue',
+        children: (
+          <div key={item.historyId}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>
+                {STATUS_LABELS[item.status] || item.status}
+              </span>
+              {item.changedBy && (
+                <span style={{ fontSize: 12, color: '#4f46e5', background: '#eef2ff', padding: '2px 8px', borderRadius: 4, fontWeight: 500 }}>
+                  Bởi: {item.changedBy}
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 3 }}>
+              {formatDate(item.changedAt)}
+            </div>
+            {item.note && (
+              <div style={{
+                fontSize: 13,
+                color: '#4b5563',
+                marginTop: 6,
+                background: '#f9fafb',
+                padding: '6px 12px',
+                borderRadius: 6,
+                border: '1px solid #f3f4f6',
+              }}>
+                {item.note}
+              </div>
+            )}
+          </div>
+        ),
+      }))
+    : [
+        {
+          dot: <ClockCircleOutlined style={{ fontSize: 14, color: '#4f46e5' }} />,
+          color: 'blue',
+          children: (
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>Phiếu sửa chữa được tạo</div>
+              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{formatDate(ticket.createdAt)}</div>
+            </div>
+          ),
+        },
+      ];
 
   return (
     <div>
-      <h2 style={{ marginBottom: 24 }}>Chi tiết phiếu sửa chữa: {ticket.ticketCode}</h2>
-      <Card className="glass-card" style={{ marginBottom: 24 }}>
-        <Descriptions bordered column={2}>
-          <Descriptions.Item label="Mã phiếu">{ticket.ticketCode}</Descriptions.Item>
-          <Descriptions.Item label="Trạng thái"><TicketStatusBadge status={ticket.status} /></Descriptions.Item>
-          <Descriptions.Item label="Thiết bị">{ticket.device?.brand} {ticket.device?.model}</Descriptions.Item>
-          <Descriptions.Item label="Ngày tạo">{formatDate(ticket.createdAt)}</Descriptions.Item>
-          <Descriptions.Item label="Mô tả lỗi" span={2}>{ticket.issueDescription}</Descriptions.Item>
-          {ticket.diagnosisNotes && <Descriptions.Item label="Ghi chú chẩn đoán" span={2}>{ticket.diagnosisNotes}</Descriptions.Item>}
-        </Descriptions>
-      </Card>
-      
-      {quote && quote.status === 'PENDING' && (
-        <Card title="Báo giá" className="glass-card" style={{ marginBottom: 24, borderColor: 'orange' }}>
-          <p><strong>Tổng tiền:</strong> <span style={{ color: 'red', fontSize: '1.2rem', fontWeight: 'bold' }}>{formatCurrency(quote.totalAmount)}</span></p>
-          <Space>
-            <Button type="primary" onClick={handleAcceptQuote}>Đồng ý sửa</Button>
-            <Button danger onClick={handleRejectQuote}>Từ chối</Button>
-          </Space>
-        </Card>
-      )}
+      {/* ── Back Button + Header ── */}
+      <div className="mc-mb-24">
+        <button
+          className="mc-btn-secondary mc-mb-16"
+          style={{ fontSize: 13, padding: '6px 14px' }}
+          onClick={() => navigate('/customer/tickets')}
+        >
+          <ArrowLeftOutlined /> Quay lại
+        </button>
 
-      <Card title="Mã QR" className="glass-card">
-        <QRCodeSVG value={ticket.ticketCode} size={128} />
-      </Card>
+        <div className="mc-flex-between" style={{ flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 6, letterSpacing: '-0.3px' }}>
+              Phiếu sửa chữa
+            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <span style={{
+                fontFamily: 'monospace', fontSize: 15, fontWeight: 700,
+                color: '#4f46e5', background: '#eef2ff',
+                padding: '3px 12px', borderRadius: 8, letterSpacing: 1,
+              }}>
+                {ticket.ticketCode}
+              </span>
+              <span className={`mc-status-badge mc-status-${ticket.status}`}>
+                {statusLabel}
+              </span>
+            </div>
+          </div>
+
+          {isPendingQuote && (
+            <div style={{
+              background: '#fef3c7', border: '1px solid #fcd34d',
+              borderRadius: 10, padding: '10px 16px',
+              fontSize: 13, color: '#92400e', fontWeight: 500,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              ⚠️ Bạn cần xác nhận báo giá để tiến hành sửa chữa
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, alignItems: 'start' }}>
+        {/* ── Left Column ── */}
+        <div>
+          {/* 1. Thông tin thiết bị & KTV */}
+          <SectionCard icon={<LaptopOutlined />} title="Thông tin thiết bị">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 12,
+                background: '#eef2ff', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <DeviceIcon deviceType={ticket.deviceType || ticket.device?.deviceType} size={28} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 18, color: '#111827' }}>
+                  {ticket.deviceBrand || ticket.device?.brand} {ticket.deviceModel || ticket.device?.model}
+                </div>
+                <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
+                  {ticket.deviceType || ticket.device?.deviceType || 'Thiết bị'}
+                  {(ticket.deviceSerialNumber || ticket.serialNumber) && ` · Serial: ${ticket.deviceSerialNumber || ticket.serialNumber}`}
+                </div>
+              </div>
+            </div>
+
+            <Divider style={{ margin: '14px 0' }} />
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, fontSize: 13 }}>
+              <div>
+                <span style={{ color: '#6b7280' }}>Kỹ thuật viên phụ trách: </span>
+                <span style={{ fontWeight: 600, color: ticket.staffName ? '#111827' : '#9ca3af' }}>
+                  {ticket.staffName ? `👨‍🔧 ${ticket.staffName}` : 'Đang phân công'}
+                </span>
+              </div>
+              {ticket.completedAt && (
+                <div>
+                  <span style={{ color: '#6b7280' }}>Hoàn tất lúc: </span>
+                  <span style={{ fontWeight: 600, color: '#10b981' }}>{formatDate(ticket.completedAt)}</span>
+                </div>
+              )}
+            </div>
+          </SectionCard>
+
+          {/* 2. Vấn đề khách báo */}
+          <SectionCard icon={<InfoCircleOutlined />} title="Vấn đề báo cáo">
+            <div style={{
+              background: '#f9fafb', borderRadius: 10,
+              padding: '14px 16px', fontSize: 15,
+              color: '#374151', lineHeight: 1.7,
+              borderLeft: '4px solid #c7d2fe',
+            }}>
+              "{ticket.issueDescription || 'Không có mô tả'}"
+            </div>
+          </SectionCard>
+
+          {/* 3. Tiến trình sửa chữa */}
+          <SectionCard icon={<ToolOutlined />} title="Tiến trình sửa chữa">
+            <RepairProgressSteps status={ticket.status} />
+          </SectionCard>
+
+          {/* 4. Kết quả kiểm tra */}
+          {ticket.diagnosisNotes && (
+            <SectionCard icon={<FileTextOutlined />} title="Kết quả kiểm tra chẩn đoán">
+              <div style={{
+                background: '#f0fdf4', borderRadius: 10,
+                padding: '14px 16px', fontSize: 14,
+                color: '#166534', lineHeight: 1.7,
+                border: '1px solid #bbf7d0',
+              }}>
+                {ticket.diagnosisNotes}
+              </div>
+            </SectionCard>
+          )}
+
+          {/* 5. Lịch sử trạng thái */}
+          <SectionCard icon={<ClockCircleOutlined />} title="Lịch sử trạng thái phiếu">
+            <AntTimeline items={timelineItems} style={{ marginTop: 12 }} />
+          </SectionCard>
+        </div>
+
+        {/* ── Right Column ── */}
+        <div style={{ position: 'sticky', top: 84 }}>
+          {/* 6. Báo giá */}
+          {quote && (
+            <div className="mc-mb-16">
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 10 }}>
+                💰 Báo giá sửa chữa
+              </div>
+              <QuoteCard quote={quote} onAction={fetchAll} />
+            </div>
+          )}
+
+          {/* 7. QR Code */}
+          <SectionCard icon={<QrcodeOutlined />} title="Tra cứu phiếu">
+            <div className="mc-qr-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              {ticket.qrCodeBase64 ? (
+                <img
+                  src={ticket.qrCodeBase64}
+                  alt={`QR-${ticket.ticketCode}`}
+                  style={{ width: 140, height: 140, objectFit: 'contain', borderRadius: 8, border: '1px solid #e5e7eb', padding: 4 }}
+                />
+              ) : (
+                <QRCodeSVG
+                  value={ticket.ticketCode}
+                  size={140}
+                  fgColor="#111827"
+                  style={{ borderRadius: 4 }}
+                />
+              )}
+              <div className="mc-ticket-code-badge" style={{ marginTop: 12 }}>{ticket.ticketCode}</div>
+              <div className="mc-qr-label" style={{ marginTop: 6, color: '#6b7280', fontSize: 12 }}>
+                Quét mã QR này để tra cứu nhanh<br />tình trạng phiếu sửa chữa
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* Ngày tạo */}
+          <div style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', marginTop: 8 }}>
+            Tạo lúc: {formatDate(ticket.createdAt)}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile: Right column moves below on small screens */}
+      <style>{`
+        @media (max-width: 768px) {
+          .ticket-detail-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -4,31 +4,22 @@ import HeroSection from '../../components/public/HeroSection';
 import ServicesSection from '../../components/public/ServicesSection';
 import WhyChooseUsSection from '../../components/public/WhyChooseUsSection';
 import RepairProcessSection from '../../components/public/RepairProcessSection';
-import TrackRepairSection from '../../components/public/TrackRepairSection';
 import CTASection from '../../components/public/CTASection';
 
 export default function LandingPage() {
-  const { onOpenBooking, onScrollToSection } = useOutletContext() || {};
+  const { onScrollToSection } = useOutletContext() || {};
 
   return (
     <>
-      <HeroSection
-        onOpenBooking={onOpenBooking}
-        onScrollToSection={onScrollToSection}
-      />
+      <HeroSection />
 
-      <ServicesSection
-        onOpenBooking={onOpenBooking}
-      />
+      <ServicesSection />
 
       <RepairProcessSection />
 
       <WhyChooseUsSection />
 
-      <TrackRepairSection />
-
       <CTASection
-        onOpenBooking={onOpenBooking}
         onScrollToSection={onScrollToSection}
       />
     </>

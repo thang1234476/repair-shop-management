@@ -8,7 +8,7 @@ import {
   ClockCircleOutlined
 } from '@ant-design/icons';
 
-export default function PublicFooter({ onOpenBooking, onScrollToSection }) {
+export default function PublicFooter({ onScrollToSection }) {
   const navigate = useNavigate();
 
   return (
@@ -54,8 +54,6 @@ export default function PublicFooter({ onOpenBooking, onScrollToSection }) {
             <h4 className="pub-footer-heading">Liên Kết Nhanh</h4>
             <ul className="pub-footer-links">
               <li className="pub-footer-link" onClick={() => onScrollToSection('hero')}>Trang chủ</li>
-              <li className="pub-footer-link" onClick={() => onScrollToSection('track-ticket')}>Tra cứu phiếu sửa chữa</li>
-              <li className="pub-footer-link" onClick={onOpenBooking}>Đặt lịch hẹn</li>
               <li className="pub-footer-link" onClick={() => onScrollToSection('process')}>Quy trình 7 bước</li>
               <li className="pub-footer-link" onClick={() => navigate('/login')}>Cổng đăng nhập hệ thống</li>
               <li className="pub-footer-link" onClick={() => navigate('/login/customer')}>Dành cho Khách hàng</li>

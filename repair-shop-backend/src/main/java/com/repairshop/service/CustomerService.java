@@ -1,10 +1,14 @@
 package com.repairshop.service;
+import com.repairshop.dto.request.CreateCustomerRequest;
 import com.repairshop.dto.request.CustomerProfileRequest;
+import com.repairshop.dto.response.CustomerProfileResponse;
 import com.repairshop.dto.response.CustomerResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface CustomerService {
+    CustomerProfileResponse getCustomerProfile(Integer userId);
+    CustomerResponse createCustomer(CreateCustomerRequest request);
     CustomerResponse updateProfile(Integer userId, CustomerProfileRequest request);
     Page<CustomerResponse> getAllCustomers(String search, Pageable pageable);
     CustomerResponse getCustomer(Integer customerId);

@@ -108,6 +108,13 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    public InvoiceResponse getInvoiceByTicketId(Integer ticketId) {
+        return invoiceRepository.findByTicketTicketId(ticketId)
+            .map(this::mapToResponse)
+            .orElse(null);
+    }
+
+    @Override
     public Page<InvoiceResponse> getAllInvoices(InvoiceStatus status, LocalDateTime from, LocalDateTime to,
                                                 String search, Pageable pageable) {
         return invoiceRepository.findWithFilters(status, from, to, search, pageable).map(this::mapToResponse);

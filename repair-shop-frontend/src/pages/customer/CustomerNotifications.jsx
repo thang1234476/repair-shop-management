@@ -1,58 +1,173 @@
-import React, { useEffect, useState } from 'react';
-import { List, Card, Button, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Spin, Button, message } from 'antd';
+import { BellOutlined, CheckOutlined } from '@ant-design/icons';
 import { customerApi } from '../../api/customerApi';
-import { formatDate } from '../../utils/helpers';
 import { useNotification } from '../../context/NotificationContext';
+import NotificationItem from '../../components/modern/NotificationItem';
+
+const BASE = '/customer';
+
+const TYPE_FILTERS = [
+  { key: 'ALL',    label: 'Tất cả' },
+  { key: 'UNREAD', label: 'Chưa đọc' },
+  { key: 'READ',   label: 'Đã đọc' },
+];
 
 export default function CustomerNotifications() {
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('ALL');
   const { resetUnread } = useNotification();
 
   useEffect(() => {
     fetchNotifications();
     resetUnread();
-  }, [resetUnread]);
+  }, []);
 
   const fetchNotifications = async () => {
+    setLoading(true);
     try {
-      const res = await customerApi.getNotifications({ size: 20, sort: 'createdAt,desc' });
-      setNotifications(res.data.data.content);
-    } catch (error) {
+      const res = await customerApi.getNotifications({ size: 50, sort: 'createdAt,desc' });
+      setNotifications(res.data.data.content || []);
+    } catch {
       message.error('Lỗi tải thông báo');
+    } finally {
+      setLoading(false);
     }
   };
 
   const markRead = async (id) => {
     try {
       await customerApi.markNotificationRead(id);
-      fetchNotifications();
-    } catch (error) {
-      message.error('Lỗi');
+      setNotifications(prev => prev.map(n => {
+        const notifId = n.notificationId ?? n.id;
+        return notifId === id ? { ...n, isRead: true, read: true } : n;
+      }));
+    } catch {
+      message.error('Lỗi đánh dấu đã đọc');
     }
   };
 
+  const markAllRead = async () => {
+    const unread = notifications.filter(n => !(n.isRead ?? n.read));
+    if (unread.length === 0) return;
+    try {
+      await Promise.all(unread.map(n => customerApi.markNotificationRead(n.notificationId ?? n.id)));
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true, read: true })));
+      message.success('Đã đánh dấu tất cả là đã đọc');
+      resetUnread();
+    } catch {
+      message.error('Lỗi khi đánh dấu');
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !(n.isRead ?? n.read)).length;
+
+  const displayed = notifications.filter(n => {
+    const isRead = n.isRead ?? n.read;
+    if (filter === 'UNREAD') return !isRead;
+    if (filter === 'READ')   return isRead;
+    return true;
+  });
+
   return (
-    <Card title={<span style={{color:'white'}}>Thông báo</span>} className="glass-card">
-      <List
-        itemLayout="horizontal"
-        dataSource={notifications}
-        renderItem={item => (
-          <List.Item
-            actions={[!item.read && <Button type="link" onClick={() => markRead(item.id)}>Đánh dấu đã đọc</Button>]}
-            style={{ opacity: item.read ? 0.6 : 1 }}
+    <div>
+      {/* ── Header ── */}
+      <div className="mc-flex-between mc-mb-24" style={{ flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 4 }}>
+            Thông báo
+            {unreadCount > 0 && (
+              <span style={{
+                marginLeft: 10, fontSize: 14, fontWeight: 700,
+                background: '#4f46e5', color: 'white',
+                padding: '2px 10px', borderRadius: 100,
+              }}>
+                {unreadCount}
+              </span>
+            )}
+          </h1>
+          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
+            Cập nhật mới nhất về thiết bị của bạn
+          </p>
+        </div>
+        {unreadCount > 0 && (
+          <Button
+            icon={<CheckOutlined />}
+            onClick={markAllRead}
+            style={{ borderRadius: 10, borderColor: '#4f46e5', color: '#4f46e5' }}
           >
-            <List.Item.Meta
-              title={<span style={{ color: item.read ? '#aaa' : 'white' }}>{item.title}</span>}
-              description={
-                <>
-                  <div style={{ color: '#ccc' }}>{item.message}</div>
-                  <small>{formatDate(item.createdAt)}</small>
-                </>
-              }
-            />
-          </List.Item>
+            Đánh dấu tất cả đã đọc
+          </Button>
         )}
-      />
-    </Card>
+      </div>
+
+      {/* ── Filter Tabs ── */}
+      <div className="mc-filter-tabs mc-mb-20">
+        {TYPE_FILTERS.map(tab => {
+          const count = tab.key === 'ALL'
+            ? notifications.length
+            : tab.key === 'UNREAD'
+              ? notifications.filter(n => !(n.isRead ?? n.read)).length
+              : notifications.filter(n => (n.isRead ?? n.read)).length;
+          return (
+            <button
+              key={tab.key}
+              className={`mc-filter-tab${filter === tab.key ? ' active' : ''}`}
+              onClick={() => setFilter(tab.key)}
+            >
+              {tab.label}
+              {count > 0 && (
+                <span style={{
+                  marginLeft: 6,
+                  background: filter === tab.key ? 'rgba(255,255,255,0.3)' : '#e5e7eb',
+                  color: filter === tab.key ? 'white' : '#374151',
+                  padding: '0 6px', borderRadius: 100,
+                  fontSize: 11, fontWeight: 600,
+                }}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Content ── */}
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
+          <Spin size="large" />
+        </div>
+      ) : displayed.length === 0 ? (
+        <div className="mc-card">
+          <div className="mc-empty">
+            <div className="mc-empty-icon">
+              <BellOutlined style={{ fontSize: 56, color: '#d1d5db' }} />
+            </div>
+            <div className="mc-empty-title">
+              {filter === 'UNREAD' ? 'Không có thông báo chưa đọc' : 'Chưa có thông báo nào'}
+            </div>
+            <div className="mc-empty-desc">
+              {filter === 'UNREAD'
+                ? 'Tất cả thông báo đã được đọc'
+                : 'Thông báo về tình trạng sửa chữa thiết bị sẽ xuất hiện tại đây'}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mc-card" style={{ padding: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {displayed.map(notif => (
+              <NotificationItem
+                key={notif.notificationId ?? notif.id}
+                notification={notif}
+                onMarkRead={markRead}
+                basePath={BASE}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -42,7 +42,12 @@ const SERVICES = [
   },
 ];
 
-export default function ServicesSection({ onOpenBooking }) {
+export default function ServicesSection() {
+  const handleContact = () => {
+    const el = document.getElementById('footer');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <section className="pub-section pub-section-alt" id="services">
       <div className="pub-container">
@@ -64,9 +69,9 @@ export default function ServicesSection({ onOpenBooking }) {
               <p className="pub-service-desc">{item.desc}</p>
               <div
                 className="pub-service-link"
-                onClick={onOpenBooking}
+                onClick={handleContact}
               >
-                Đặt dịch vụ ngay <ArrowRightOutlined style={{ fontSize: 12 }} />
+                Liên hệ tư vấn <ArrowRightOutlined style={{ fontSize: 12 }} />
               </div>
             </div>
           ))}
