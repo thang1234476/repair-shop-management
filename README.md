@@ -147,41 +147,6 @@ Frontend sẽ chạy tại **http://localhost:5173**
 
 ---
 
-### 5. Truy cập hệ thống
-
-| URL | Mô tả |
-|---|---|
-| http://localhost:5173 | Frontend React app |
-| http://localhost:8080/swagger-ui.html | Swagger UI - API documentation |
-| http://localhost:8080/api-docs | OpenAPI JSON spec |
-
----
-
-## 👤 Tài khoản mẫu
-
-> **Mật khẩu chung: `Password123!`**
-
-| Username | Role | Mô tả |
-|---|---|---|
-| `admin` | ADMIN | Quản trị viên |
-| `tech_minh` | STAFF | Kỹ thuật viên |
-| `recept_lan` | STAFF | Lễ tân |
-| `customer_an` | CUSTOMER | Khách hàng 1 (có phiếu đã hoàn thành) |
-| `customer_bich` | CUSTOMER | Khách hàng 2 (có phiếu COMPLETED chưa thanh toán) |
-| `customer_cuong` | CUSTOMER | Khách hàng 3 (phiếu đang REPAIRING) |
-
----
-
-## 📊 Demo Data (Dữ liệu mẫu)
-
-Hệ thống có sẵn dữ liệu demo:
-- **5 linh kiện** (màn hình iPhone, pin Samsung, bàn phím HP, IC sạc, camera OPPO)
-- **3 thiết bị** (iPhone 13, HP EliteBook, Samsung A52)
-- **5 phiếu** ở các trạng thái: DELIVERED, COMPLETED, REPAIRING, QUOTED, RECEIVED
-- **Hóa đơn**: 1 đã thanh toán (TK-2024-001), 1 chưa thanh toán (TK-2024-002)
-
----
-
 ## 🔄 Luồng nghiệp vụ
 
 ```
