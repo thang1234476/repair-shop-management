@@ -62,14 +62,16 @@ export default function AdminDashboard() {
     try {
       setLoadingRevenue(true);
       setErrorRevenue(null);
-      let fromDate, toDate = dayjs().endOf('day');
-      if (filter === '7days') fromDate = dayjs().subtract(6, 'day').startOf('day');
+      const toDate = dayjs().endOf('day');
+      let fromDate;
+      if (filter === '7days')     fromDate = dayjs().subtract(6, 'day').startOf('day');
       else if (filter === '30days') fromDate = dayjs().subtract(29, 'day').startOf('day');
       else if (filter === 'thisMonth') fromDate = dayjs().startOf('month');
 
+      // Spring @DateTimeFormat(iso=DATE_TIME) cần format "YYYY-MM-DDTHH:mm:ss" — không có Z
       const res = await dashboardApi.getRevenue({
-        from: fromDate.toISOString(),
-        to: toDate.toISOString()
+        from: fromDate.format('YYYY-MM-DDTHH:mm:ss'),
+        to:   toDate.format('YYYY-MM-DDTHH:mm:ss'),
       });
       const data = res.data.data || [];
       const formattedData = data.map(item => ({

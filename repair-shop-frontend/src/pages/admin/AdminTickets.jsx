@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Table, Input, Button, Tag, Space, Modal, Form, Select, DatePicker,
   Descriptions, Tabs, message, Drawer, Badge, Card, Row, Col,
-  Statistic, Tooltip, Typography, Divider, Timeline, Alert, Steps, Popconfirm
+  Statistic, Tooltip, Typography, Divider, Timeline, Alert, Steps, Popconfirm, Spin
 } from 'antd';
 import {
   SearchOutlined, EyeOutlined, EditOutlined, ReloadOutlined,
@@ -81,22 +81,22 @@ export default function AdminTickets() {
   const [assignLoading, setAssignLoading] = useState(false);
   const [assignForm] = Form.useForm();
 
-  // Stats
-  const [stats, setStats] = useState({});
-
   // Fetch staff list for filter
   useEffect(() => {
     staffApi.getAllStaff({ size: 100 }).then(res => setStaffList(res.data.data.content || [])).catch(() => {});
   }, []);
 
-  // Build fetch params
+  // Build fetch params — all filters are sent as AND conditions to backend
   const buildParams = useCallback((page = 1, pageSize = 10) => {
     const p = { page: page - 1, size: pageSize };
     if (filterStatus) p.status = filterStatus;
-    if (filterStaffId) p.staffId = filterStaffId;
+    // staffId phải là số nguyên — parse parseInt để tránh gửi string
+    if (filterStaffId != null) p.staffId = parseInt(filterStaffId, 10);
     if (searchText) p.search = searchText;
-    if (filterDateRange?.[0]) p.from = filterDateRange[0].startOf('day').toISOString();
-    if (filterDateRange?.[1]) p.to = filterDateRange[1].endOf('day').toISOString();
+    // Spring @DateTimeFormat(iso=DATE_TIME) cần format: 2024-01-01T00:00:00
+    // không có Z suffix — dùng format() thay vì toISOString()
+    if (filterDateRange?.[0]) p.from = filterDateRange[0].startOf('day').format('YYYY-MM-DDTHH:mm:ss');
+    if (filterDateRange?.[1]) p.to   = filterDateRange[1].endOf('day').format('YYYY-MM-DDTHH:mm:ss');
     return p;
   }, [filterStatus, filterStaffId, filterDateRange, searchText]);
 
@@ -109,12 +109,6 @@ export default function AdminTickets() {
       const data = res.data.data;
       setTickets(data.content || []);
       setPagination({ current: page, pageSize, total: data.totalElements || 0 });
-
-      // Compute stats
-      const all = data.content || [];
-      const s = {};
-      STATUS_LIST.forEach(st => { s[st.value] = all.filter(t => t.status === st.value).length; });
-      setStats(s);
     } catch {
       message.error('Không thể tải danh sách phiếu sửa chữa');
     } finally {
@@ -122,7 +116,34 @@ export default function AdminTickets() {
     }
   }, [buildParams]);
 
-  useEffect(() => { fetchTickets(); }, [filterStatus, filterStaffId, filterDateRange]);
+  useEffect(() => { fetchTickets(1, 10); }, [filterStatus, filterStaffId, filterDateRange, fetchTickets]);
+  // NOTE: searchText không vào dep này — search chỉ trigger bằng nút Tìm (onSearch)
+
+  const handleRefresh = () => {
+    fetchTickets(1, pagination.pageSize);
+  };
+
+  // Reset tất cả filter về mặc định
+  const handleResetFilters = useCallback(async () => {
+    setSearchText('');
+    setFilterStatus(null);
+    setFilterStaffId(null);
+    setFilterDateRange(null);
+    // Gọi API trực tiếp với params rống
+    setLoading(true);
+    try {
+      const res = await ticketApi.getAllTickets({ page: 0, size: pagination.pageSize });
+      const data = res.data.data;
+      setTickets(data.content || []);
+      setPagination(prev => ({ ...prev, current: 1, total: data.totalElements || 0 }));
+    } catch {
+      message.error('Không thể tải dữ liệu');
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.pageSize]);
+
+  const hasActiveFilters = searchText || filterStatus || filterStaffId || filterDateRange;
 
   // Open detail drawer
   const openDetail = async (ticket) => {
@@ -249,18 +270,15 @@ export default function AdminTickets() {
       key: 'actions',
       width: 150,
       render: (_, r) => (
-        <Space size={4}>
-          <Tooltip title="Xem chi tiết & tiến độ">
-            <Button size="small" icon={<EyeOutlined />} onClick={() => openDetail(r)} />
+        <Space size={8}>
+          <Tooltip title="Xem chi tiết">
+            <Button size="small" type="primary" ghost icon={<EyeOutlined />} onClick={() => openDetail(r)} style={{ borderRadius: 6 }} />
           </Tooltip>
           <Tooltip title="Cập nhật trạng thái">
-            <Button size="small" icon={<SyncOutlined />} type="primary" ghost
-              onClick={() => openStatusUpdate(r)} />
+            <Button size="small" type="default" icon={<SyncOutlined />} style={{ borderRadius: 6, background: '#1e293b', color: '#3b82f6', borderColor: '#3b82f6' }} onClick={() => openStatusUpdate(r)} />
           </Tooltip>
           <Tooltip title="Phân công nhân viên">
-            <Button size="small" icon={<TeamOutlined />}
-              style={{ color: '#059669', borderColor: '#059669' }}
-              onClick={() => openAssign(r)} />
+            <Button size="small" icon={<TeamOutlined />} style={{ borderRadius: 6, color: '#10b981', borderColor: '#10b981', background: '#1e293b' }} onClick={() => openAssign(r)} />
           </Tooltip>
         </Space>
       ),
@@ -272,125 +290,195 @@ export default function AdminTickets() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div style={{ padding: '0 4px' }}>
+    <div style={{ padding: '0 12px', maxWidth: 1600, margin: '0 auto' }}>
       {/* Header */}
-      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <Col>
-          <Title level={4} style={{ margin: 0 }}>
-            <FileTextOutlined style={{ color: '#7c3aed', marginRight: 8 }} />
-            Quản lý Phiếu sửa chữa
-          </Title>
-          <Text type="secondary">Tổng: <strong>{pagination.total}</strong> phiếu</Text>
+          <Space align="start" size="middle">
+            <div style={{ padding: '10px 14px', background: 'rgba(124, 58, 237, 0.15)', borderRadius: 12 }}>
+              <FileTextOutlined style={{ fontSize: 26, color: '#a855f7' }} />
+            </div>
+            <div>
+              <Title level={3} style={{ margin: 0, color: '#fff', fontWeight: 600 }}>Quản lý Phiếu sửa chữa</Title>
+              <Text style={{ color: '#94a3b8' }}>Theo dõi và quản lý toàn bộ phiếu sửa chữa trong hệ thống</Text>
+            </div>
+          </Space>
         </Col>
         <Col>
-          <Tooltip title="Làm mới">
-            <Button icon={<ReloadOutlined />} onClick={() => fetchTickets(1, pagination.pageSize)} />
-          </Tooltip>
+          <Button
+            type="primary"
+            ghost
+            icon={<ReloadOutlined />}
+            onClick={handleRefresh}
+            style={{ borderRadius: 8, borderColor: '#a855f7', color: '#a855f7' }}
+          >
+            Làm mới
+          </Button>
         </Col>
       </Row>
 
-      {/* Status quick-filter cards */}
-      <Row gutter={8} style={{ marginBottom: 16 }}>
-        {[
-          { value: null, label: 'Tất cả', color: '#7c3aed' },
-          { value: 'RECEIVED', label: 'Tiếp nhận', color: '#3b82f6' },
-          { value: 'REPAIRING', label: 'Đang sửa', color: '#d97706' },
-          { value: 'COMPLETED', label: 'Hoàn tất', color: '#16a34a' },
-          { value: 'CANCELLED', label: 'Đã hủy', color: '#dc2626' },
-        ].map(item => (
-          <Col key={String(item.value)} span={4}>
-            <Card
-              size="small"
-              hoverable
-              onClick={() => { setFilterStatus(item.value); }}
-              style={{
-                cursor: 'pointer',
-                textAlign: 'center',
-                borderColor: filterStatus === item.value ? item.color : '#f0f0f0',
-                background: filterStatus === item.value ? `${item.color}10` : '#fff',
-                borderWidth: filterStatus === item.value ? 2 : 1,
-              }}
-            >
-              <div style={{ color: item.color, fontWeight: 700, fontSize: 18 }}>
-                {item.value ? (stats[item.value] || 0) : pagination.total}
-              </div>
-              <div style={{ fontSize: 11, color: '#666' }}>{item.label}</div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      {/* Filters row */}
-      <Card size="small" style={{ marginBottom: 12, background: '#fafafa' }}>
-        <Row gutter={12} align="middle">
-          <Col flex="1">
-            <Search
-              placeholder="Tìm mã phiếu, tên KH, thiết bị..."
-              allowClear
-              enterButton={<><SearchOutlined /> Tìm</>}
-              style={{ width: '100%' }}
-              onSearch={val => { setSearchText(val); fetchTickets(1, pagination.pageSize); }}
-              onChange={e => { if (!e.target.value) { setSearchText(''); fetchTickets(1, pagination.pageSize); } }}
-            />
-          </Col>
-          <Col>
-            <Select
-              placeholder="Lọc trạng thái"
-              style={{ width: 160 }}
-              allowClear
-              value={filterStatus}
-              onChange={val => setFilterStatus(val || null)}
-            >
-              {STATUS_LIST.map(s => (
-                <Option key={s.value} value={s.value}>
-                  <Tag color={s.color} style={{ margin: 0 }}>{s.label}</Tag>
-                </Option>
-              ))}
-            </Select>
-          </Col>
-          <Col>
-            <Select
-              placeholder="Lọc nhân viên"
-              style={{ width: 180 }}
-              allowClear
-              showSearch
-              optionFilterProp="children"
-              value={filterStaffId}
-              onChange={val => setFilterStaffId(val || null)}
-            >
-              {staffList.map(s => (
-                <Option key={s.staffId} value={s.staffId}>{s.fullName}</Option>
-              ))}
-            </Select>
-          </Col>
-          <Col>
-            <RangePicker
-              format="DD/MM/YYYY"
-              placeholder={['Từ ngày', 'Đến ngày']}
-              onChange={val => setFilterDateRange(val)}
-              style={{ width: 240 }}
-            />
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Table */}
-      <Table
-        dataSource={tickets}
-        columns={columns}
-        rowKey="ticketId"
-        loading={loading}
-        pagination={{
-          current: pagination.current,
-          pageSize: pagination.pageSize,
-          total: pagination.total,
-          showSizeChanger: true,
-          showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} phiếu`,
-          onChange: (page, pageSize) => fetchTickets(page, pageSize),
+      <Card
+        variant="borderless"
+        style={{
+          background: '#16213e',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          borderRadius: 12,
         }}
-        scroll={{ x: 1000 }}
-        rowClassName={r => ['CANCELLED','REJECTED'].includes(r.status) ? 'cancelled-row' : ''}
-      />
+        styles={{ body: { padding: '24px' } }}
+      >
+        {/* Filters row */}
+        <div style={{ marginBottom: 20 }}>
+          <Row gutter={[12, 12]} align="middle">
+            <Col xs={24} sm={24} md={8} lg={8}>
+              <Search
+                placeholder="Tìm mã phiếu, khách hàng, SĐT..."
+                allowClear
+                value={searchText}
+                enterButton={
+                  <Button type="primary" icon={<SearchOutlined />} style={{ background: '#7c3aed', borderColor: '#7c3aed' }}>
+                    Tìm
+                  </Button>
+                }
+                size="large"
+                onSearch={async (val) => {
+                  setSearchText(val);
+                  // Gọi API trực tiếp với search value mới — tránh stale closure
+                  setLoading(true);
+                  try {
+                    const p = { page: 0, size: pagination.pageSize };
+                    if (val) p.search = val;
+                    if (filterStatus) p.status = filterStatus;
+                    if (filterStaffId != null) p.staffId = parseInt(filterStaffId, 10);
+                    if (filterDateRange?.[0]) p.from = filterDateRange[0].startOf('day').format('YYYY-MM-DDTHH:mm:ss');
+                    if (filterDateRange?.[1]) p.to   = filterDateRange[1].endOf('day').format('YYYY-MM-DDTHH:mm:ss');
+                    const res = await ticketApi.getAllTickets(p);
+                    const data = res.data.data;
+                    setTickets(data.content || []);
+                    setPagination(prev => ({ ...prev, current: 1, total: data.totalElements || 0 }));
+                  } catch {
+                    message.error('Không thể tìm kiếm');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                onChange={e => {
+                  const val = e.target.value;
+                  setSearchText(val);
+                }}
+                style={{ width: '100%' }}
+              />
+            </Col>
+            <Col xs={24} sm={12} md={4} lg={4}>
+              <Select
+                placeholder="Tất cả trạng thái"
+                size="large"
+                style={{ width: '100%' }}
+                allowClear
+                value={filterStatus}
+                onChange={val => setFilterStatus(val || null)}
+              >
+                {STATUS_LIST.map(s => (
+                  <Option key={s.value} value={s.value}>
+                    <Tag color={s.color} style={{ margin: 0 }}>{s.label}</Tag>
+                  </Option>
+                ))}
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={4} lg={4}>
+              <Select
+                placeholder="Tất cả nhân viên"
+                size="large"
+                style={{ width: '100%' }}
+                allowClear
+                showSearch
+                optionFilterProp="children"
+                value={filterStaffId}
+                onChange={val => setFilterStaffId(val != null ? parseInt(val, 10) : null)}
+              >
+                {staffList.map(s => (
+                  <Option key={s.staffId} value={s.staffId}>{s.fullName}</Option>
+                ))}
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={5} lg={5}>
+              <RangePicker
+                size="large"
+                format="DD/MM/YYYY"
+                placeholder={['Từ ngày', 'Đến ngày']}
+                value={filterDateRange}
+                onChange={val => setFilterDateRange(val)}
+                style={{ width: '100%' }}
+              />
+            </Col>
+            <Col xs={24} sm={12} md={3} lg={3}>
+              <Button
+                size="large"
+                icon={<ReloadOutlined />}
+                onClick={handleResetFilters}
+                disabled={!hasActiveFilters}
+                style={{
+                  width: '100%',
+                  borderRadius: 8,
+                  background: hasActiveFilters ? 'rgba(239,68,68,0.1)' : 'transparent',
+                  borderColor: hasActiveFilters ? '#ef4444' : '#334155',
+                  color: hasActiveFilters ? '#ef4444' : '#64748b',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Xóa lọc
+              </Button>
+            </Col>
+          </Row>
+
+          {/* Active filter summary */}
+          {hasActiveFilters && (
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Text style={{ color: '#64748b', fontSize: 12 }}>Đang lọc:</Text>
+              {searchText && <Tag closable onClose={() => { setSearchText(''); fetchTickets(1, 10); }} color="purple">Từ khóa: "{searchText}"</Tag>}
+              {filterStatus && <Tag closable onClose={() => setFilterStatus(null)} color={STATUS_MAP[filterStatus]?.color}>{STATUS_MAP[filterStatus]?.label}</Tag>}
+              {filterStaffId != null && <Tag closable onClose={() => setFilterStaffId(null)} color="blue">{staffList.find(s => s.staffId === filterStaffId)?.fullName || 'Nhân viên'}</Tag>}
+              {filterDateRange && <Tag closable onClose={() => setFilterDateRange(null)} color="cyan">{filterDateRange[0]?.format('DD/MM/YYYY')} → {filterDateRange[1]?.format('DD/MM/YYYY')}</Tag>}
+              <Text style={{ color: '#94a3b8', fontSize: 12 }}>• {pagination.total} kết quả</Text>
+            </div>
+          )}
+        </div>
+
+        {/* Table */}
+        <Table
+          dataSource={tickets}
+          columns={columns}
+          rowKey="ticketId"
+          loading={{
+            indicator: <Spin indicator={<SyncOutlined spin />} tip="Đang tải dữ liệu..." />,
+            spinning: loading
+          }}
+          locale={{
+            emptyText: (
+              <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                <FileTextOutlined style={{ fontSize: 48, color: '#334155', marginBottom: 16, display: 'block' }} />
+                <Text style={{ color: '#64748b', fontSize: 15 }}>Không tìm thấy phiếu sửa chữa phù hợp</Text>
+                {hasActiveFilters && (
+                  <div style={{ marginTop: 12 }}>
+                    <Button size="small" onClick={handleResetFilters} style={{ color: '#a855f7', borderColor: '#a855f7' }}>
+                      Xóa bộ lọc
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )
+          }}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} phiếu`,
+            onChange: (page, pageSize) => fetchTickets(page, pageSize),
+          }}
+          scroll={{ x: 1000 }}
+          className="dark-table"
+        />
+      </Card>
 
       {/* ============ DETAIL DRAWER ============ */}
       <Drawer
@@ -407,7 +495,7 @@ export default function AdminTickets() {
             </div>
           </Space>
         }
-        width={860}
+        size="large"
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
         loading={detailLoading}

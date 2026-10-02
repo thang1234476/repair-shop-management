@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,9 +32,11 @@ public class DashboardServiceImpl implements DashboardService {
     public DashboardSummaryResponse getSummary() {
         return DashboardSummaryResponse.builder()
             .totalTickets(ticketRepository.count())
-            .activeTickets(ticketRepository.countByStatus(TicketStatus.RECEIVED)) // Using activeTickets mapped to RECEIVED for simplicity
+            .activeTickets(ticketRepository.countByStatus(TicketStatus.RECEIVED))
             .completedTickets(ticketRepository.countByStatus(TicketStatus.COMPLETED))
-            .totalRevenue(invoiceRepository.findAll().stream().map(com.repairshop.entity.Invoice::getFinalAmount).reduce(BigDecimal.ZERO, BigDecimal::add))
+            .totalRevenue(invoiceRepository.findAll().stream()
+                .map(com.repairshop.entity.Invoice::getFinalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add))
             .totalCustomers(customerRepository.count())
             .totalStaff(staffRepository.count())
             .build();
@@ -41,9 +44,21 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public List<Map<String, Object>> getRevenueByDateRange(LocalDateTime from, LocalDateTime to) {
-        // Simple implementation: this normally would group by date in SQL
-        // Returning empty map array to satisfy compilation and basic structure
-        return new ArrayList<>();
+        List<Object[]> rows = invoiceRepository.getRevenueByDay(from, to);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            // row[0]: java.sql.Date or String depending on DB driver
+            String dateStr = row[0] != null ? row[0].toString() : "";
+            // row[1]: BigDecimal revenue
+            BigDecimal revenue = row[1] instanceof BigDecimal
+                ? (BigDecimal) row[1]
+                : new BigDecimal(row[1].toString());
+            entry.put("date", dateStr);
+            entry.put("revenue", revenue);
+            result.add(entry);
+        }
+        return result;
     }
 
     @Override
