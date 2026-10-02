@@ -3,9 +3,12 @@ import { Form, Input, Button, Checkbox, Card, message } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ForgotPasswordModal from '../components/modern/ForgotPasswordModal';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [forgotModalOpen, setForgotModalOpen] = useState(false);
+  const [form] = Form.useForm();
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -33,18 +36,24 @@ export default function LoginPage() {
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Card style={{ width: 400 }} className="glass-card">
           <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Đăng Nhập</h2>
-          <Form name="login" onFinish={onFinish} layout="vertical">
+          <Form form={form} name="login" onFinish={onFinish} layout="vertical">
             <Form.Item name="email" rules={[{ required: true, message: 'Vui lòng nhập email!' }, { type: 'email', message: 'Email không hợp lệ!' }]}>
               <Input prefix={<MailOutlined />} placeholder="Email" size="large" />
             </Form.Item>
             <Form.Item name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}>
               <Input.Password prefix={<LockOutlined />} placeholder="Mật khẩu" size="large" />
             </Form.Item>
-            <Form.Item>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <Form.Item name="remember" valuePropName="checked" noStyle>
                 <Checkbox>Ghi nhớ đăng nhập</Checkbox>
               </Form.Item>
-            </Form.Item>
+              <span
+                onClick={() => setForgotModalOpen(true)}
+                style={{ fontSize: 13, color: '#a78bfa', cursor: 'pointer', fontWeight: 500 }}
+              >
+                Quên mật khẩu?
+              </span>
+            </div>
             <Form.Item>
               <Button type="primary" htmlType="submit" size="large" block loading={loading} style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>
                 Đăng Nhập
@@ -56,6 +65,13 @@ export default function LoginPage() {
           </Form>
         </Card>
       </div>
+
+      <ForgotPasswordModal
+        open={forgotModalOpen}
+        onClose={() => setForgotModalOpen(false)}
+        primaryColor="#7c3aed"
+        initialEmail={form.getFieldValue('email')}
+      />
     </div>
   );
 }
