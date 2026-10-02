@@ -9,6 +9,7 @@ import {
   ArrowLeftOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext';
+import ForgotPasswordModal from '../../components/modern/ForgotPasswordModal';
 import '../../styles/public-landing.css';
 
 const ROLE_META = {
@@ -46,6 +47,8 @@ export default function RoleLoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [forgotModalOpen, setForgotModalOpen] = useState(false);
+  const [form] = Form.useForm();
 
   const meta = ROLE_META[role?.toLowerCase()] || ROLE_META.customer;
 
@@ -118,7 +121,7 @@ export default function RoleLoginPage() {
             </p>
           </div>
 
-          <Form name="role_login" onFinish={onFinish} layout="vertical">
+          <Form form={form} name="role_login" onFinish={onFinish} layout="vertical">
             <Form.Item
               name="email"
               label={<span style={{ fontWeight: 600, color: '#334155' }}>Email</span>}
@@ -149,7 +152,10 @@ export default function RoleLoginPage() {
               <Form.Item name="remember" valuePropName="checked" noStyle>
                 <Checkbox style={{ color: '#64748b', fontSize: 13 }}>Ghi nhớ đăng nhập</Checkbox>
               </Form.Item>
-              <span style={{ fontSize: 13, color: meta.color, cursor: 'pointer', fontWeight: 500 }}>
+              <span
+                onClick={() => setForgotModalOpen(true)}
+                style={{ fontSize: 13, color: meta.color, cursor: 'pointer', fontWeight: 500 }}
+              >
                 Quên mật khẩu?
               </span>
             </div>
@@ -185,6 +191,13 @@ export default function RoleLoginPage() {
             )}
           </Form>
         </div>
+
+        <ForgotPasswordModal
+          open={forgotModalOpen}
+          onClose={() => setForgotModalOpen(false)}
+          primaryColor={meta.color}
+          initialEmail={form.getFieldValue('email')}
+        />
       </div>
     </ConfigProvider>
   );
